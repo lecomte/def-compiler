@@ -8,6 +8,11 @@ void yyerror(const char *s) { std::printf("Error: %s\n", s);std::exit(1); }
 int errors;
 %}
 
+%union {
+    char *a;
+    int n;
+}
+
 %start program
 
 %token IDENTIFIER
