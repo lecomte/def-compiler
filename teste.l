@@ -1,6 +1,7 @@
 %option noyywrap
 
 %{ 
+#include <string>
 #include "parser.h"
 %}
 
@@ -55,9 +56,9 @@ sym "("|"{"|"["|"]"|"}"|")"|","|";"|"="|"+"|"-"|"*"|"/"|"<"|">"|"<="|">="|"=="|"
 			}
 }
 
-{num}  {yylval.n = atoi(yytext); return NUM;}
+{num}  {yylval.number = atoi(yytext); return NUM;}
 
-{var}   {yylval.a = yytext; return IDENTIFIER;}
+{var}   {yylval.name = new std::string(yytext, yyleng); return IDENTIFIER;}
 
 .	return 1;
 

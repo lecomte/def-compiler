@@ -9,8 +9,8 @@ int errors;
 %}
 
 %union {
-    char *a;
-    int n;
+    std::string *name;
+    int token, number;
 }
 
 %start program
