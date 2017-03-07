@@ -1,10 +1,7 @@
-%option C++ noyywrap
+%option noyywrap
 
-%{
-#include <fstream>
-int mylineno = 0;
-std::filebuf fb;
-std::ofstream os;
+%{ 
+#include "parser.h"
 %}
 
 letras   [A-Za-z]
@@ -15,9 +12,36 @@ key "def"|"if"|"else"|"while"|"return"|"break"|"continue"|"int"|"void"
 sym "("|"{"|"["|"]"|"}"|")"|","|";"|"="|"+"|"-"|"*"|"/"|"<"|">"|"<="|">="|"=="|"!="|"&&"|"||"|"!"
 
 %%
-{key} os << "KEY\t" << '"' << YYText() << '"' << '\n';
+"def" return DEF;
+"if" return IF;
+"else" return ELSE;
+"while" return WHILE;
+"return" return RETURN;
+"break" return BREAK;
+"continue" return CONTINUE;
+"int" return INTEGER;
+"void" return VOID;
+"(" return LPAREN;
+")" return RPAREN;
+"{" return LBRACE;
+"}" return RBRACE;
+"," return COMMA;
+";" return SCOL;
+"=" return EQTO;
+"+" return PLUS;
+"-" return MINUS;
+"*" return MULT;
+"/" return DIV;
+"<" return LESS;
+">" return GRE;
+"<=" return LEQ;
+">=" return GEQ;
+"==" return EQ;
+"!=" return DIFF;
+"&&" return AND;
+"||" return OR;
+"!" return NOT;
 
-{sym} os << "SYM\t" << '"' << YYText() << '"' << '\n';
 
 " "|\n|\t
 
@@ -31,24 +55,10 @@ sym "("|"{"|"["|"]"|"}"|")"|","|";"|"="|"+"|"-"|"*"|"/"|"<"|">"|"<="|">="|"=="|"
 			}
 }
 
-{num}  os << "DEC\t" << '"' << YYText() << '"' << '\n';
+{num}  return NUM;
 
-{var}    os << "ID\t" << '"' << YYText() << '"' << '\n';
+{var}    return IDENTIFIER;
 
-.	os << "ERROR\t" << '"' << YYText() << '"' << '\n'; 
+.	return 1;
 
 %%
-
-int main( int /* argc */, char**  argv )
-	{
-	fb.open(argv[1], std::ios::in);
-	os.open(argv[2]);
-	std::istream is(&fb);
-	FlexLexer* lexer = new yyFlexLexer;
-	lexer->yy_switch_to_buffer(lexer->yy_create_buffer(&is,YY_BUF_SIZE));
-	while(lexer->yylex() != 0)
-		;
-	fb.close();
-	os.close();
-	return 0;
-}
