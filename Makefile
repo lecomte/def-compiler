@@ -14,3 +14,6 @@ parser.h: parser.cpp
 
 lexer.cpp: teste.l
 	flex -o lexer.cpp teste.l
+	
+clean:
+	rm *.o *.cpp
