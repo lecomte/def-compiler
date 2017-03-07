@@ -1,18 +1,11 @@
 %{
 #include <bits/stdc++.h>
 
-extern "C"
-{
-        int yyparse(void);
-        int yylex(void);  
-        int yywrap()
-        {
-                return 1;
-        }
+extern int yylex();
+extern FILE *yyin;
+void yyerror(const char *s) { std::printf("Error: %s\n", s);std::exit(1); }
 
-}
-
-int yydebug=1;
+int errors;
 %}
 
 %start program
@@ -124,10 +117,10 @@ type : INTEGER | VOID;
 %%
 
 int main( int argc, char *argv[] ) { 
-	extern FILE *yyin;
-	++argv; −−argc;
-	yyin = fopen( argv[0], ”r” );
+	++argv; --argc;
+	yyin = fopen( argv[0], "r" );
 	errors = 0;
+	yydebug = 1;
 	yyparse ();
 	return 0;
 }
