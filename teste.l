@@ -55,9 +55,9 @@ sym "("|"{"|"["|"]"|"}"|")"|","|";"|"="|"+"|"-"|"*"|"/"|"<"|">"|"<="|">="|"=="|"
 			}
 }
 
-{num}  return NUM;
+{num}  {yylval.n = atoi(yytext); return NUM;}
 
-{var}    return IDENTIFIER;
+{var}   {yylval.a = yytext; return IDENTIFIER;}
 
 .	return 1;
 
