@@ -9,4 +9,11 @@ class Program {
 
 class Declaration {};
 
+class DecVar {
+	public:
+		std::string *identificator;
+		Expression *assingExpression;
+		DecVar(std::string *i, Expression *a) : identificator(i), assignExpression(a) {}
+};
+
 #endif
