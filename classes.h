@@ -9,7 +9,7 @@ class Program {
 
 class Declaration {};
 
-class DecVar {
+class DecVar : public Declaration {
 	public:
 		std::string *identificator;
 		Expression *assingExpression;
