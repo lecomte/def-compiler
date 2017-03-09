@@ -4,6 +4,7 @@
 class Program {
 	public:
 		std::vector<DecVar> *decs;
+		Program(std::vector<DecVar> *d) : decs(d) {}
 }
 
 #endif
