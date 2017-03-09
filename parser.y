@@ -12,6 +12,15 @@ int errors;
 %union {
     std::string *name;
     int token, number;
+    Declaration *dc;
+    Statement *stm;
+    Operator *op;
+    Expression *ex;
+    Integer *i;
+    std::vector<Declaration *> *dcs;
+    std::vector<Var *> *par;
+    std::vector<Expression *> *exs;
+    std::vector<Statement *> *stms;
 }
 
 %start program
