@@ -105,7 +105,7 @@ assign : IDENTIFIER EQTO expr {$$ = (Statement *) new Assignment($1, $3);};
 
 funccall: IDENTIFIER LPAREN args RPAREN {$$ = (Expression *) new FuncCall($1, $2);} | IDENTIFIER LPAREN RPAREN {$$ = (Expression *) new FuncCall($1, NULL);}; 
 
-args : args COMMA expr | expr;
+args : args COMMA expr {$1->push_back($3); $$ = $1;} | expr {$$ = new std::vector<Expression *>; $$->push_back($1);};
 
 expr : expr binop exp | exp;
 
