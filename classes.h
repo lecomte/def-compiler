@@ -16,4 +16,13 @@ class DecVar : public Declaration {
 		DecVar(std::string *i, Expression *a) : identificator(i), assignExpression(a) {}
 };
 
+class DecFunc : public Declaration {
+	public:
+		Type *type;
+		std::string *identificator;
+		std::vector<Var> *params;
+		Block *block;
+		DecFunc(Type *t, std::string *i, std::vector<Var> *p, Block *b) : type(t), identificator(i), params(p), block(b) {}
+};
+
 #endif
