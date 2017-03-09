@@ -34,7 +34,7 @@ Program *ast;
 
 %type <p> program;
 %type <dc> dec decvar decfunc param
-%type <dcs> decs
+%type <dcs> decs decvs
 %type <ex> exp expr
 %type <exs> args
 %type <par> params
@@ -73,7 +73,7 @@ params : params COMMA param {$1->push_back($3); $$ = $1;}
 
 param : type IDENTIFIER {$$ = new Var($2);};
 
-block : LBRACE decvs stmts RBRACE
+block : LBRACE decvs stmts RBRACE {$$ = }
 	| LBRACE decvs RBRACE
 	| LBRACE stmts RBRACE
 	| LBRACE RBRACE
