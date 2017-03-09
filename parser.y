@@ -55,20 +55,20 @@ program : decs {$$ = new Program($1);}
 	| /*vazio*/ {$$ = NULL;}
 ;
 
-decs : decs dec {$1->push_back($2); $$ = $1;} | dec {$$ = new std::vector<Declaration *>; $$->push_back($1)} ;
+decs : decs dec {$1->push_back($2); $$ = $1;} | dec {$$ = new std::vector<Declaration *>; $$->push_back($1);} ;
 
 dec : decvar | decfunc ;
 
-decvar : type IDENTIFIER SCOL {$$ = (Declaration *) new DecVar($2, NULL)}
-	| type IDENTIFIER EQTO expr {$$ = (Declaration *) new DecVar($2, $4)}
+decvar : type IDENTIFIER SCOL {$$ = (Declaration *) new DecVar($2, NULL);}
+	| type IDENTIFIER EQTO expr {$$ = (Declaration *) new DecVar($2, $4);}
 ;
 
-decfunc : DEF type IDENTIFIER LPAREN RPAREN block {$$ = (Declaration *) new DecFunc($2, $3, NULL, $6)}
-	| DEF type IDENTIFIER LPAREN params RPAREN block {$$ = (Declaration *) new DecFunc($2, $3, $5, $7)}
+decfunc : DEF type IDENTIFIER LPAREN RPAREN block {$$ = (Declaration *) new DecFunc($2, $3, NULL, $6);}
+	| DEF type IDENTIFIER LPAREN params RPAREN block {$$ = (Declaration *) new DecFunc($2, $3, $5, $7);}
 ;
 
-params : params COMMA param
-	| param
+params : params COMMA param {$1->push_back($3); $$ = $1;}
+	| param {$$ = new std::vector<Var *>; $$->push_back($1);}
 ;
 
 param : type IDENTIFIER;
