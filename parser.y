@@ -13,6 +13,7 @@ Program *ast;
 %union {
     std::string *name;
     int token, *number;
+    Block *b;
     Var *v;
     Program *p;
     Declaration *dc;
@@ -41,6 +42,7 @@ Program *ast;
 %type <v> param
 %type <stm> stmt ifstmt retstmt
 %type <stms> stmts
+%type <b> block
 
 %left PLUS MINUS
 %left MULT DIV
