@@ -94,8 +94,8 @@ stmt : assign SCOL
 	| CONTINUE SCOL {$$ = (Statement *) new Continue;}
 ;
 
-ifstmt : IF LPAREN expr RPAREN block %prec LOWER_THAN_ELSE
-	| IF LPAREN expr RPAREN block ELSE block
+ifstmt : IF LPAREN expr RPAREN block %prec LOWER_THAN_ELSE {$$ = (Statement *) new If($3, $5, NULL);}
+	| IF LPAREN expr RPAREN block ELSE block {$$ = (Statement *) new If($3, $5, $7);}
 ;
 
 retstmt : RETURN SCOL | RETURN expr SCOL
