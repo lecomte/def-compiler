@@ -115,7 +115,7 @@ binop : PLUS {$$ = new Operator(new std::string("+"));} | MINUS {$$ = new Operat
 
 unop : NOT {$$ = new Operator(new std::string("!"));} | MINUS {$$ = new Operator(new std::string("-"));};
 
-type : INTEGER | VOID;
+type : INTEGER {$$ = new Type(1);} | VOID {$$ = new Type(0);};
 
 %%
 
