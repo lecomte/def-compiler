@@ -27,4 +27,11 @@ class DecFunc : public Declaration {
 
 class Expression {};
 
+class BinOperation : public Expression {
+	public:
+		Expression *first, *second;
+		Operator *op;
+		BinOperation(Operator *o, Expression *f, Expression *s) : op(o), first(f), second(s) {}
+};
+
 #endif
