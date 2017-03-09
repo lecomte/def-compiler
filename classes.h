@@ -39,7 +39,14 @@ class UnOperation : public Expression {
 		Expression *exp;
 		Operator *op;
 		UnOperation(Expression *e, Operator *o) : exp(e), op(o) {}
-}
+};
 
 class Statement : public Expression {};
+
+class FuncCall : public Statement {
+	public:
+		std::string *identifier;
+		std::vector<Expression> *args;
+		FuncCall(std::string *i, std::vector<Expression> *a) : identifier(i), args(a) {}
+};
 #endif
