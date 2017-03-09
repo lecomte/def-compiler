@@ -3,8 +3,8 @@
 
 class Program {
 	public:
-		std::vector<DecVar> *decs;
-		Program(std::vector<DecVar> *d) : decs(d) {}
+		std::vector<Declaration> *decs;
+		Program(std::vector<Declaration> *d) : decs(d) {}
 }
 
 #endif
