@@ -71,7 +71,7 @@ params : params COMMA param {$1->push_back($3); $$ = $1;}
 	| param {$$ = new std::vector<Var *>; $$->push_back($1);}
 ;
 
-param : type IDENTIFIER;
+param : type IDENTIFIER {$$ = new Var($2);};
 
 block : LBRACE decvs stmts RBRACE
 	| LBRACE decvs RBRACE
