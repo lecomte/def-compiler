@@ -49,4 +49,11 @@ class FuncCall : public Statement {
 		std::vector<Expression> *args;
 		FuncCall(std::string *i, std::vector<Expression> *a) : identifier(i), args(a) {}
 };
+
+class Integer : public Expression {
+	public:
+		int *number;
+		Integer(int *n) : number(n) {}
+}
+
 #endif
