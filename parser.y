@@ -73,10 +73,10 @@ params : params COMMA param {$1->push_back($3); $$ = $1;}
 
 param : type IDENTIFIER {$$ = new Var($2);};
 
-block : LBRACE decvs stmts RBRACE {$$ = }
-	| LBRACE decvs RBRACE
-	| LBRACE stmts RBRACE
-	| LBRACE RBRACE
+block : LBRACE decvs stmts RBRACE {$$ = new Block($3, $2);}
+	| LBRACE decvs RBRACE {$$ = new Block(NULL, $2);}
+	| LBRACE stmts RBRACE {$$ = new Block($2, NULL);}
+	| LBRACE RBRACE {$$ = new Block(NULL, NULL);}
 ;
 
 decvs : decvs decvar | decvar;
