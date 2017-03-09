@@ -100,4 +100,10 @@ class While : public Statement {
 		While(Expression *c, Block *e) : condition(c), exec(e) {}
 };
 
+class Block {
+	public:
+		std::vector<Statement *> *statements;
+		Block(std::vector<Statement *> *s) : statements(s) {};
+};
+
 #endif
