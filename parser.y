@@ -63,8 +63,8 @@ decvar : type IDENTIFIER SCOL {$$ = (Declaration *) new DecVar($2, NULL)}
 	| type IDENTIFIER EQTO expr {$$ = (Declaration *) new DecVar($2, $4)}
 ;
 
-decfunc : DEF type IDENTIFIER LPAREN RPAREN block
-	| DEF type IDENTIFIER LPAREN params RPAREN block
+decfunc : DEF type IDENTIFIER LPAREN RPAREN block {$$ = (Declaration *) new DecFunc($2, $3, NULL, $6)}
+	| DEF type IDENTIFIER LPAREN params RPAREN block {$$ = (Declaration *) new DecFunc($2, $3, $5, $7)}
 ;
 
 params : params COMMA param
