@@ -103,7 +103,7 @@ retstmt : RETURN SCOL {$$ = (Statement *) new Return(NULL);} | RETURN expr SCOL 
 
 assign : IDENTIFIER EQTO expr {$$ = (Statement *) new Assignment($1, $3);};
 
-funccall: IDENTIFIER LPAREN args RPAREN | IDENTIFIER LPAREN RPAREN;
+funccall: IDENTIFIER LPAREN args RPAREN {$$ = (Expression *) new FuncCall($1, $2);} | IDENTIFIER LPAREN RPAREN {$$ = (Expression *) new FuncCall($1, NULL);}; 
 
 args : args COMMA expr | expr;
 
