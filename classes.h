@@ -86,4 +86,11 @@ class Return : public Statement {
 		Return(Expression *v) : value(v) {}
 };
 
+class If : public Statement {
+	public:
+		Expression *condition;
+		Block *yes, *no;
+		If(Expression *c, Block *y, Block *n) : condition(c), yes(y), no(n) {}
+}
+
 #endif
