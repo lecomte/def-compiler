@@ -54,6 +54,12 @@ class Integer : public Expression {
 	public:
 		int *number;
 		Integer(int *n) : number(n) {}
-}
+};
+
+class Var : public Expression {
+	public:
+		std::string *name;
+		Var(std::string *n) : name(n) {}
+};
 
 #endif
