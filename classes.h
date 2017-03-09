@@ -41,4 +41,5 @@ class UnOperation : public Expression {
 		UnOperation(Expression *e, Operator *o) : exp(e), op(o) {}
 }
 
+class Statement : public Expression {};
 #endif
