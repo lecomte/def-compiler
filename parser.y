@@ -101,7 +101,7 @@ ifstmt : IF LPAREN expr RPAREN block %prec LOWER_THAN_ELSE {$$ = (Statement *) n
 retstmt : RETURN SCOL {$$ = (Statement *) new Return(NULL);} | RETURN expr SCOL {$$ = (Statement *) new Return($2);}
 ;
 
-assign : IDENTIFIER EQTO expr;
+assign : IDENTIFIER EQTO expr {$$ = (Statement *) new Assignment($1, $3);};
 
 funccall: IDENTIFIER LPAREN args RPAREN | IDENTIFIER LPAREN RPAREN;
 
