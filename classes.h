@@ -25,4 +25,6 @@ class DecFunc : public Declaration {
 		DecFunc(Type *t, std::string *i, std::vector<Var> *p, Block *b) : type(t), identificator(i), params(p), block(b) {}
 };
 
+class Expression {};
+
 #endif
