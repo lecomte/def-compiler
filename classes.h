@@ -68,4 +68,10 @@ class Type {
 		Type(int a) : t(a) {}
 };
 
+class Operator {
+	public:
+		char op;
+		Operator(char o) : op(o) {}
+};
+
 #endif
