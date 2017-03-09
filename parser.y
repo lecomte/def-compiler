@@ -113,7 +113,7 @@ exp : unop exp {$$ = (Expression *) new UnOperation($1, $2);} | LPAREN expr RPAR
 
 binop : PLUS {$$ = new Operator(new std::string("+"));} | MINUS {$$ = new Operator(new std::string("-"));} | DIV {$$ = new Operator(new std::string("/"));} | MULT {$$ = new Operator(new std::string("*"));} | EQ {$$ = new Operator(new std::string("=="));} | DIFF {$$ = new Operator(new std::string("!="));} | GRE {$$ = new Operator(new std::string(">"));} | LESS {$$ = new Operator(new std::string("<"));} | GEQ {$$ = new Operator(new std::string(">="));} | LEQ {$$ = new Operator(new std::string("<="));} | AND {$$ = new Operator(new std::string("&&"));} | OR {$$ = new Operator(new std::string("||"));};
 
-unop : NOT | MINUS;
+unop : NOT {$$ = new Operator(new std::string("!"));} | MINUS {$$ = new Operator(new std::string("-"));};
 
 type : INTEGER | VOID;
 
