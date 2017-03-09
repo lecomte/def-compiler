@@ -7,6 +7,6 @@ class Program {
 		Program(std::vector<Declaration> *d) : decs(d) {}
 };
 
-class Declaration {};s
+class Declaration {};
 
 #endif
