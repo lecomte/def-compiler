@@ -2,7 +2,9 @@
 
 %{ 
 #include <string>
-#include "parser.h"
+#include <vector>
+#include "classes.h"
+#include "parser.hpp"
 %}
 
 letras   [A-Za-z]
@@ -29,22 +31,22 @@ sym "("|"{"|"["|"]"|"}"|")"|","|";"|"="|"+"|"-"|"*"|"/"|"<"|">"|"<="|">="|"=="|"
 "," return COMMA;
 ";" return SCOL;
 "=" return EQTO;
-"+" return PLUS;
-"-" return MINUS;
-"*" return MULT;
-"/" return DIV;
-"<" return LESS;
-">" return GRE;
-"<=" return LEQ;
-">=" return GEQ;
-"==" return EQ;
-"!=" return DIFF;
-"&&" return AND;
-"||" return OR;
-"!" return NOT;
+"+" {yylval.name = new std::string(yytext, yyleng); return PLUS;}
+"-" {yylval.name = new std::string(yytext, yyleng); return MINUS;}
+"*" {yylval.name = new std::string(yytext, yyleng); return MULT;}
+"/" {yylval.name = new std::string(yytext, yyleng); return DIV;}
+"<" {yylval.name = new std::string(yytext, yyleng); return LESS;}
+">" {yylval.name = new std::string(yytext, yyleng); return GRE;}
+"<=" {yylval.name = new std::string(yytext, yyleng); return LEQ;}
+">=" {yylval.name = new std::string(yytext, yyleng); return GEQ;}
+"==" {yylval.name = new std::string(yytext, yyleng); return EQ;}
+"!=" {yylval.name = new std::string(yytext, yyleng); return DIFF;}
+"&&" {yylval.name = new std::string(yytext, yyleng); return AND;}
+"||" {yylval.name = new std::string(yytext, yyleng); return OR;}
+"!" {yylval.name = new std::string(yytext, yyleng); return NOT;}
 
 
-" "|\n|\t
+" "|\n|\t	;
 
 "//"		{
 		int c;
@@ -56,7 +58,7 @@ sym "("|"{"|"["|"]"|"}"|")"|","|";"|"="|"+"|"-"|"*"|"/"|"<"|">"|"<="|">="|"=="|"
 			}
 }
 
-{num}  {yylval.number = &(atoi(yytext)); return NUM;}
+{num}  {int n = atoi(yytext); yylval.number = n; return NUM;}
 
 {var}   {yylval.name = new std::string(yytext, yyleng); return IDENTIFIER;}
 

@@ -8,7 +8,7 @@ parser.o: parser.cpp
 	g++ -c parser.cpp
 	
 parser.cpp: parser.y
-	yacc -d -o parser.cpp parser.y
+	bison -d -o parser.cpp parser.y
 	
 parser.h: parser.cpp
 
