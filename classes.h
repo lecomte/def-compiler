@@ -7,7 +7,7 @@ class Program {
 		Program(std::vector<Declaration *> *d) : decs(d) {}
 };
 
-class Declaration {};
+class Declaration : public Statement {};
 
 class DecVar : public Declaration {
 	public:
