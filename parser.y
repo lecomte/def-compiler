@@ -51,11 +51,11 @@ Program *ast;
 %nonassoc RETURN
 %%
 
-program : decs
-	| /*vazio*/
+program : decs {$$ = new Program($1);}
+	| /*vazio*/ {$$ = NULL;}
 ;
 
-decs : decs dec | dec ;
+decs : decs dec {$1->push_back($2); $$ = $1;} | dec {$$ = new std::vector<Declaration *>; $$->push_back($1)} ;
 
 dec : decvar | decfunc ;
 
