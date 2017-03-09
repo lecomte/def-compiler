@@ -62,4 +62,10 @@ class Var : public Expression {
 		Var(std::string *n) : name(n) {}
 };
 
+class Type {
+	public:
+		int t; /* INT = 1, VOID = 0 */
+		Type(int a) : t(a) {}
+};
+
 #endif
