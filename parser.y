@@ -107,7 +107,7 @@ funccall: IDENTIFIER LPAREN args RPAREN {$$ = (Expression *) new FuncCall($1, $2
 
 args : args COMMA expr {$1->push_back($3); $$ = $1;} | expr {$$ = new std::vector<Expression *>; $$->push_back($1);};
 
-expr : expr binop exp | exp;
+expr : expr binop exp {$$ = new Expression($2, $1, $3);} | exp;
 
 exp : unop exp | LPAREN expr RPAREN | funccall | NUM | IDENTIFIER;
 
