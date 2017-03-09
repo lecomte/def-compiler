@@ -81,7 +81,7 @@ block : LBRACE decvs stmts RBRACE {$$ = new Block($3, $2);}
 	| LBRACE RBRACE {$$ = new Block(NULL, NULL);}
 ;
 
-decvs : decvs decvar | decvar;
+decvs : decvs decvar {$1->push_back($2); $$ = $1;} | decvar {$$ = new std::vector<Declaration *>; $$->push_back($1)};
 
 stmts : stmts stmt | stmt;
 
