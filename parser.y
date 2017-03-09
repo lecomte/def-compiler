@@ -40,7 +40,7 @@ Program *ast;
 %type <exs> args
 %type <par> params
 %type <v> param
-%type <stm> stmt ifstmt retstmt
+%type <stm> stmt ifstmt retstmt assign
 %type <stms> stmts
 %type <b> block
 
@@ -88,6 +88,7 @@ stmts : stmts stmt {$1->push_back($2); $$ = $1;} | stmt {$$ = new std::vector<St
 stmt : assign SCOL
 	| funccall SCOL
 	| ifstmt
+	| WHILE LPAREN expr RPAREN block
 	| retstmt
 	| BREAK SCOL
 	| CONTINUE SCOL
