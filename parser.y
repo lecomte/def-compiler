@@ -98,7 +98,7 @@ ifstmt : IF LPAREN expr RPAREN block %prec LOWER_THAN_ELSE {$$ = (Statement *) n
 	| IF LPAREN expr RPAREN block ELSE block {$$ = (Statement *) new If($3, $5, $7);}
 ;
 
-retstmt : RETURN SCOL | RETURN expr SCOL
+retstmt : RETURN SCOL {$$ = (Statement *) new Return(NULL);} | RETURN expr SCOL {$$ = (Statement *) new Return($2);}
 ;
 
 assign : IDENTIFIER EQTO expr;
