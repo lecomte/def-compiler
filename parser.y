@@ -7,16 +7,18 @@ extern FILE *yyin;
 void yyerror(const char *s) { std::printf("Error: %s\n", s);std::exit(1); }
 
 int errors;
+Program *ast;
 %}
 
 %union {
     std::string *name;
-    int token, number;
+    int token, *number;
+    Var *v;
+    Program *p;
     Declaration *dc;
     Statement *stm;
     Operator *op;
     Expression *ex;
-    Integer *i;
     std::vector<Declaration *> *dcs;
     std::vector<Var *> *par;
     std::vector<Expression *> *exs;
@@ -25,37 +27,20 @@ int errors;
 
 %start program
 
-%token IDENTIFIER
-%token SCOL
-%token COMMA
-%token LPAREN
-%token RPAREN
-%token LBRACE
-%token RBRACE
-%token IF
-%token ELSE
-%token WHILE
-%token RETURN
-%token CONTINUE
-%token NOT
-%token PLUS
-%token MINUS
-%token MULT
-%token DIV
-%token LESS
-%token GRE
-%token GEQ
-%token LEQ
-%token DIFF
-%token EQ
-%token EQTO
-%token DEF
-%token BREAK
-%token NUM
-%token AND
-%token OR
-%token INTEGER
-%token VOID
+%token <name> IDENTIFIER
+%token <token> SCOL COMMA LPAREN RPAREN LBRACE RBRACE IF ELSE WHILE RETURN CONTINUE NOT PLUS MINUS MULT DIV LESS GRE GEQ LEQ DIFF EQ EQTO DEF BREAK
+%token <number> NUM
+%token <token> AND OR INTEGER VOID
+
+%type <p> program;
+%type <dc> dec decvar decfunc param
+%type <dcs> decs
+%type <ex> exp expr
+%type <exs> args
+%type <par> params
+%type <v> param
+%type <stm> stmt ifstmt retstmt
+%type <stms> stmts
 
 %left PLUS MINUS
 %left MULT DIV
