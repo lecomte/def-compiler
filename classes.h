@@ -3,8 +3,8 @@
 
 class Program {
 	public:
-		std::vector<Declaration> *decs;
-		Program(std::vector<Declaration> *d) : decs(d) {}
+		std::vector<Declaration *> *decs;
+		Program(std::vector<Declaration *> *d) : decs(d) {}
 };
 
 class Declaration {};
@@ -20,9 +20,9 @@ class DecFunc : public Declaration {
 	public:
 		Type *type;
 		std::string *identificator;
-		std::vector<Var> *params;
+		std::vector<Var *> *params;
 		Block *block;
-		DecFunc(Type *t, std::string *i, std::vector<Var> *p, Block *b) : type(t), identificator(i), params(p), block(b) {}
+		DecFunc(Type *t, std::string *i, std::vector<Var *> *p, Block *b) : type(t), identificator(i), params(p), block(b) {}
 };
 
 class Expression {};
@@ -46,8 +46,8 @@ class Statement : public Expression {};
 class FuncCall : public Statement {
 	public:
 		std::string *identifier;
-		std::vector<Expression> *args;
-		FuncCall(std::string *i, std::vector<Expression> *a) : identifier(i), args(a) {}
+		std::vector<Expression *> *args;
+		FuncCall(std::string *i, std::vector<Expression *> *a) : identifier(i), args(a) {}
 };
 
 class Integer : public Expression {
