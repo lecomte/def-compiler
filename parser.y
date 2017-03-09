@@ -107,11 +107,11 @@ funccall: IDENTIFIER LPAREN args RPAREN {$$ = (Expression *) new FuncCall($1, $2
 
 args : args COMMA expr {$1->push_back($3); $$ = $1;} | expr {$$ = new std::vector<Expression *>; $$->push_back($1);};
 
-expr : expr binop exp {$$ = new Expression($2, $1, $3);} | exp;
+expr : expr binop exp {$$ = (Expression *) new BinOperation($2, $1, $3);} | exp;
 
-exp : unop exp | LPAREN expr RPAREN | funccall | NUM | IDENTIFIER;
+exp : unop exp {$$ = (Expression *) new UnOperation($1, $2);} | LPAREN expr RPAREN {$$ = $2;} | funccall | NUM {$$ = (Expression *) new Integer($1);} | IDENTIFIER {$$ = (Expression *) new Var($1);};
 
-binop : PLUS | MINUS | DIV | MULT | EQ | DIFF | GRE | LESS | GEQ | LEQ | AND | OR;
+binop : PLUS {$$ = new Operator(new std::string("+"));} | MINUS {$$ = new Operator(new std::string("-"));} | DIV {$$ = new Operator(new std::string("/"));} | MULT {$$ = new Operator(new std::string("*"));} | EQ {$$ = new Operator(new std::string("=="));} | DIFF {$$ = new Operator(new std::string("!="));} | GRE {$$ = new Operator(new std::string(">"));} | LESS {$$ = new Operator(new std::string("<"));} | GEQ {$$ = new Operator(new std::string(">="));} | LEQ {$$ = new Operator(new std::string("<="));} | AND {$$ = new Operator(new std::string("&&"));} | OR {$$ = new Operator(new std::string("||"));};
 
 unop : NOT | MINUS;
 
