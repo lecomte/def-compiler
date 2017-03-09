@@ -59,8 +59,8 @@ decs : decs dec {$1->push_back($2); $$ = $1;} | dec {$$ = new std::vector<Declar
 
 dec : decvar | decfunc ;
 
-decvar : type IDENTIFIER SCOL
-	| type IDENTIFIER EQTO expr
+decvar : type IDENTIFIER SCOL {$$ = (Declaration *) new Declaration($2, NULL)}
+	| type IDENTIFIER EQTO expr {$$ = (Declaration *) new Declaration($2, $4)}
 ;
 
 decfunc : DEF type IDENTIFIER LPAREN RPAREN block
