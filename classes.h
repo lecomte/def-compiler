@@ -91,6 +91,13 @@ class If : public Statement {
 		Expression *condition;
 		Block *yes, *no;
 		If(Expression *c, Block *y, Block *n) : condition(c), yes(y), no(n) {}
-}
+};
+
+class While : public Statement {
+	public:
+		Expression *condition;
+		Block *exec;
+		While(Expression *c, Block *e) : condition(c), exec(e) {}
+};
 
 #endif
