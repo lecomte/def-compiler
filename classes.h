@@ -34,4 +34,11 @@ class BinOperation : public Expression {
 		BinOperation(Operator *o, Expression *f, Expression *s) : op(o), first(f), second(s) {}
 };
 
+class UnOperation : public Expression {
+	public:
+		Expression *exp;
+		Operator *op;
+		UnOperation(Expression *e, Operator *o) : exp(e), op(o) {}
+}
+
 #endif
