@@ -80,4 +80,10 @@ class Assingment : public Statement {
 	Assignment(std::string *i, Expression *v) : identifier(i), value(v) {}
 };
 
+class Return : Statement {
+	public:
+		Expression *value;
+		Return(Expression *v) : value(v) {}
+};
+
 #endif
