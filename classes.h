@@ -102,8 +102,9 @@ class While : public Statement {
 
 class Block {
 	public:
+		std::vector<DecVar *> *decs;
 		std::vector<Statement *> *statements;
-		Block(std::vector<Statement *> *s) : statements(s) {};
+		Block(std::vector<Statement *> *s, std::vector<DecVar *> *d) : statements(s), decs(d) {};
 };
 
 class Continue : public Statement {};
