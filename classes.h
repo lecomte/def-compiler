@@ -5,6 +5,8 @@ class Program {
 	public:
 		std::vector<Declaration> *decs;
 		Program(std::vector<Declaration> *d) : decs(d) {}
-}
+};
+
+class Declaration {};s
 
 #endif
