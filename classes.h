@@ -106,4 +106,8 @@ class Block {
 		Block(std::vector<Statement *> *s) : statements(s) {};
 };
 
+class Continue : public Statement {};
+
+class Break : public Statement {};
+
 #endif
