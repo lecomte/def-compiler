@@ -74,4 +74,10 @@ class Operator {
 		Operator(char o) : op(o) {}
 };
 
+class Assingment : public Statement {
+	std::string *identifier;
+	Expression *value;
+	Assignment(std::string *i, Expression *v) : identifier(i), value(v) {}
+};
+
 #endif
