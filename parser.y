@@ -1,5 +1,6 @@
 %{
 #include <bits/stdc++.h>
+#include "classes.h"
 
 extern int yylex();
 extern FILE *yyin;
