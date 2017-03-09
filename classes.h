@@ -70,8 +70,8 @@ class Type {
 
 class Operator {
 	public:
-		char op;
-		Operator(char o) : op(o) {}
+		std::string *op;
+		Operator(std::string *o) : op(o) {}
 };
 
 class Assingment : public Statement {
