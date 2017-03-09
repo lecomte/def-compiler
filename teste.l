@@ -56,7 +56,7 @@ sym "("|"{"|"["|"]"|"}"|")"|","|";"|"="|"+"|"-"|"*"|"/"|"<"|">"|"<="|">="|"=="|"
 			}
 }
 
-{num}  {yylval.number = atoi(yytext); return NUM;}
+{num}  {yylval.number = &(atoi(yytext)); return NUM;}
 
 {var}   {yylval.name = new std::string(yytext, yyleng); return IDENTIFIER;}
 
