@@ -108,7 +108,7 @@ assign : IDENTIFIER EQTO expr;
 
 funccall: IDENTIFIER LPAREN args RPAREN | IDENTIFIER LPAREN RPAREN;
 
-args : args COMMA IDENTIFIER | IDENTIFIER;
+args : args COMMA expr | expr;
 
 expr : expr binop exp | exp;
 
