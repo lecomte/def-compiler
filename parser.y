@@ -36,7 +36,7 @@ Program *ast;
 %type <p> program;
 %type <dc> dec decvar decfunc param
 %type <dcs> decs decvs
-%type <ex> exp expr
+%type <ex> exp expr funccall
 %type <exs> args
 %type <par> params
 %type <v> param
@@ -86,12 +86,12 @@ decvs : decvs decvar {$1->push_back($2); $$ = $1;} | decvar {$$ = new std::vecto
 stmts : stmts stmt {$1->push_back($2); $$ = $1;} | stmt {$$ = new std::vector<Statement *>; $$->push_back($1);};
 
 stmt : assign SCOL
-	| funccall SCOL
+	| funccall SCOL {$$ = (Statement *) $1;}
 	| ifstmt
-	| WHILE LPAREN expr RPAREN block
+	| WHILE LPAREN expr RPAREN block {$$ = (Statement *) new While($3, $5);}
 	| retstmt
-	| BREAK SCOL
-	| CONTINUE SCOL
+	| BREAK SCOL {$$ = (Statement *) new Break;}
+	| CONTINUE SCOL {$$ = (Statement *) new Continue;}
 ;
 
 ifstmt : IF LPAREN expr RPAREN block %prec LOWER_THAN_ELSE
