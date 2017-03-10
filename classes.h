@@ -9,17 +9,6 @@ class Expression {
 		std::string print(Expression *a);
 };
 
-class Var : public Expression {
-	public:
-		std::string name;
-		Var(std::string n) : name(n) {}
-	public:
-		std::string print() {
-			std::string s = "[" + name + "]";
-			return s;
-		}
-};
-
 class Statement : public Expression {
 	public:
 		virtual ~Statement() {}
@@ -31,6 +20,7 @@ class Declaration {
 		virtual ~Declaration() {}
 		std::string print(Declaration *a);
 };
+
 
 class Type {
 	public:
@@ -75,13 +65,26 @@ class DecVar : public Declaration {
 		}
 };
 
+
+class Var : public Expression {
+	public:
+		std::string name;
+		Var(std::string n) : name(n) {}
+		Var(DecVar d) : name(d.identificator) {}
+	public:
+		std::string print() {
+			std::string s = "[" + name + "]";
+			return s;
+		}
+};
+
 class DecVarE : public DecVar {
 	public:
 		Expression &assignExpression;
 		DecVarE(std::string i, Expression &a) : DecVar(i), assignExpression(a) {}
 	public:
 		std::string print() {
-			std::string s = "[decvar [" + DecVar::identificator + "] " + assignExpression.print(&assignExpression); + "]";
+			std::string s = "[decvar [" + DecVar::identificator + "] " + assignExpression.print(&assignExpression) + "]";
 			return s;
 		}
 };
@@ -320,6 +323,15 @@ class Break : public Statement {
 			std::string s = "[break ]";
 			return s;
 		}
+};
+
+class KeepFunc {
+	public:
+		Type t;
+		std::string id;
+		int nParams;
+		KeepFunc(DecFunc f) : t(f.type), id(f.identificator), nParams(0) {}
+		KeepFunc(DecFuncP f) : t(f.DecFunc::type), id(f.DecFunc::identificator), nParams(f.params.size()) {}
 };
 
 
