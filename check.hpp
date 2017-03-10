@@ -12,7 +12,7 @@
 	void checkSym(DecVar *dv);
 	void checkSym(Statement *s, bool f);
 	void checkSym(Expression *e);
-	void checkSym(FuncCall *fc);
+	void checkSym(FuncCall *fc, bool expr);
 	void checkSym(IfE *ife);
 	void checkSym(If *i);
 	void checkSym(While *i);

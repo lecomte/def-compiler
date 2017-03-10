@@ -351,10 +351,21 @@ int main( int argc, char *argv[] ) {
 	functions.push_back(new DecFuncP(*(new Type(1)), "print", p , *(new Block())));
 	++argv; --argc;
 	yyin = fopen( argv[0], "r" );
+	std::ofstream out;
+	out.open(argv[1]);
 	errors = 0;
 	yyparse ();
 	checkSym();
-	std::cout << ast->print() << std::endl;
+	DecFunc *ma;
+	for (DecFunc *f : functions) {
+		if (f->identificator == "main")
+			ma = f;
+	}
+	if (ma == NULL) {
+		yyerror("Program lacks main function");
+		return 1;
+	}
+	out << ast->print() << std::endl;
 	return 0;
 }
 void yyerror (char *s) { /* Called by yyparse on error */

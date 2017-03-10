@@ -1,6 +1,8 @@
 #include <bits/stdc++.h>
 #include "classes.h"	
 #include "check.hpp"	
+
+bool ftype;
 	
 	void checkSym() {
 		if (ast != NULL) {
@@ -26,6 +28,7 @@
         	}
         }
         functions.push_back(df);
+        ftype = (df->type.t == 1);
         scopus.push_back(new std::vector<Declaration *>);
         if (DecFuncP *dfp = dynamic_cast<DecFuncP *>(df)) {
 			for (Var *v : dfp->params) {
@@ -76,7 +79,7 @@
 			checkSym(&(ass->value));
 		}
 		else if (FuncCall *fc = dynamic_cast<FuncCall *>(s)) {
-			checkSym(fc);
+			checkSym(fc, false);
 		}
 		else if (IfE *ifs = dynamic_cast<IfE *>(s)) {
 			checkSym(ifs);
@@ -93,6 +96,13 @@
 		else if (Continue *b = dynamic_cast<Continue *>(s)) {
 			if (!f) yyerror("Cannot continue outside of a loop");
 		}
+		else if (Return *b = dynamic_cast<Return *>(s)) {
+			if (!ftype) yyerror("Function of type void returning int");
+			checkSym(&(b->value));
+		}
+		else if (ReturnV *b = dynamic_cast<ReturnV *>(s)) {
+			if (ftype) yyerror("Function of type int returning void");
+		}
 	}
 	
 	void checkSym(Expression *e) {
@@ -107,11 +117,11 @@
 			checkSym(&(b->exp));
 		}
 		else if (FuncCall *b = dynamic_cast<FuncCall *>(e)) {
-			checkSym(b);
+			checkSym(b, true);
 		}
 	}
 	
-	void checkSym(FuncCall *fc) {
+	void checkSym(FuncCall *fc, bool expr) {
 		DecFunc *d = NULL;
 		for (DecFunc *df : functions) {
 			if (df->identificator == fc->identifier) {
@@ -122,6 +132,7 @@
 			yyerror("Function not declared");
 			return;
 		}
+		else if (expr && d->type.t == 0) yyerror("Expression value cannot be of type void");
 		DecFuncP *dfp = dynamic_cast<DecFuncP *>(d);
 		if (dfp == NULL && fc->args.size() != 0) {
 			yyerror("Too many arguments in function call");

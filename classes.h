@@ -280,7 +280,7 @@ class IfE : public Statement {
 		IfE(Expression &c, Block &y, Block &n) : condition(c), yes(y), no(n) {}
 	public:
 		std::string print() {
-			std::string s = "[if "+ condition.print(&condition) + " " + yes.print(&yes) + " else " + no.print(&no) +"]";
+			std::string s = "[if "+ condition.print(&condition) + " " + yes.print(&yes) + " " + no.print(&no) +"]";
 			return s;
 		}
 };

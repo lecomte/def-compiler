@@ -19,4 +19,4 @@ lexer.cpp: teste.l
 	lex -o lexer.cpp teste.l
 	
 clean:
-	rm *.o *.cpp
+	rm *.o parser.cpp lexer.cpp
