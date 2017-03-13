@@ -13,8 +13,8 @@
 	void checkSym(Statement *s, bool f);
 	void checkSym(Expression *e);
 	void checkSym(FuncCall *fc, bool expr);
-	void checkSym(IfE *ife);
-	void checkSym(If *i);
+	void checkSym(IfE *ife, bool f);
+	void checkSym(If *i, bool f);
 	void checkSym(While *i);
 	void checkSym(Var *v);
 #endif

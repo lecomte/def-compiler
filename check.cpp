@@ -82,10 +82,10 @@ bool ftype;
 			checkSym(fc, false);
 		}
 		else if (IfE *ifs = dynamic_cast<IfE *>(s)) {
-			checkSym(ifs);
+			checkSym(ifs, f);
 		}
 		else if (If *ifs = dynamic_cast<If *>(s)) {
-			checkSym(ifs);
+			checkSym(ifs, f);
 		}
 		else if (While *wh = dynamic_cast<While *>(s)) {
 			checkSym(wh);
@@ -147,15 +147,15 @@ bool ftype;
 		}
 	}
 	
-	void checkSym(IfE *ife) {
+	void checkSym(IfE *ife, bool f) {
 		checkSym(&(ife->condition));
-		checkSym(&(ife->yes),false);
-		checkSym(&(ife->no),false);
+		checkSym(&(ife->yes),f);
+		checkSym(&(ife->no),f);
 	}
 	
-	void checkSym(If *i) {
+	void checkSym(If *i, bool f) {
 		checkSym(&(i->condition));
-		checkSym(&(i->yes),false);
+		checkSym(&(i->yes),f);
 	}
 	
 	void checkSym(While *i) {
