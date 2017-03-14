@@ -356,7 +356,7 @@ int main( int argc, char *argv[] ) {
 	errors = 0;
 	yyparse ();
 	checkSym();
-	DecFunc *ma;
+	DecFunc *ma = NULL;
 	for (DecFunc *f : functions) {
 		if (f->identificator == "main")
 			ma = f;
