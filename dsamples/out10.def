@@ -1,0 +1,1 @@
+[program [decvar [x] [0]] [decfunc [inc_x] [paramlist] [block [assign [x] [+ [x] [1]]]]] [decfunc [main] [paramlist] [block [while [!= [x] [10]] [block [funccall [inc_x] [arglist]]]] [funccall [print] [arglist [x]]]]]]

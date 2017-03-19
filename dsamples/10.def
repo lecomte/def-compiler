@@ -1,0 +1,12 @@
+int x = 0;
+
+def void inc_x() {
+    x = x + 1;
+}
+
+def int main() {
+    while (x != 10) {
+        inc_x();
+    }
+    print(x);
+}

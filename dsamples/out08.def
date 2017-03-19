@@ -1,0 +1,1 @@
+[program [decfunc [main] [paramlist] [block [if [&& [! [<= [2] [3]]] [<= [2] [3]]] [block [funccall [print] [arglist [0]]]]]]]]
