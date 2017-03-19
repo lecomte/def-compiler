@@ -1,10 +1,10 @@
-%option C++ noyywrap
+%option noyywrap
 
-%{
-#include <fstream>
-int mylineno = 0;
-std::filebuf fb;
-std::ofstream os;
+%{ 
+#include <string>
+#include <vector>
+#include "classes.h"
+#include "parser.hpp"
 %}
 
 letras   [A-Za-z]
@@ -15,11 +15,38 @@ key "def"|"if"|"else"|"while"|"return"|"break"|"continue"|"int"|"void"
 sym "("|"{"|"["|"]"|"}"|")"|","|";"|"="|"+"|"-"|"*"|"/"|"<"|">"|"<="|">="|"=="|"!="|"&&"|"||"|"!"
 
 %%
-{key} os << "KEY\t" << '"' << YYText() << '"' << '\n';
+"def" return DEF;
+"if" return IF;
+"else" return ELSE;
+"while" return WHILE;
+"return" return RETURN;
+"break" return BREAK;
+"continue" return CONTINUE;
+"int" return INTEGER;
+"void" return VOID;
+"(" return LPAREN;
+")" return RPAREN;
+"{" return LBRACE;
+"}" return RBRACE;
+"," return COMMA;
+";" return SCOL;
+"=" return EQTO;
+"+" {yylval.name = new std::string(yytext, yyleng); return PLUS;}
+"-" {yylval.name = new std::string(yytext, yyleng); return MINUS;}
+"*" {yylval.name = new std::string(yytext, yyleng); return MULT;}
+"/" {yylval.name = new std::string(yytext, yyleng); return DIV;}
+"<" {yylval.name = new std::string(yytext, yyleng); return LESS;}
+">" {yylval.name = new std::string(yytext, yyleng); return GRE;}
+"<=" {yylval.name = new std::string(yytext, yyleng); return LEQ;}
+">=" {yylval.name = new std::string(yytext, yyleng); return GEQ;}
+"==" {yylval.name = new std::string(yytext, yyleng); return EQ;}
+"!=" {yylval.name = new std::string(yytext, yyleng); return DIFF;}
+"&&" {yylval.name = new std::string(yytext, yyleng); return AND;}
+"||" {yylval.name = new std::string(yytext, yyleng); return OR;}
+"!" {yylval.name = new std::string(yytext, yyleng); return NOT;}
 
-{sym} os << "SYM\t" << '"' << YYText() << '"' << '\n';
 
-" "|\n|\t
+" "|\n|\t	;
 
 "//"		{
 		int c;
@@ -31,24 +58,10 @@ sym "("|"{"|"["|"]"|"}"|")"|","|";"|"="|"+"|"-"|"*"|"/"|"<"|">"|"<="|">="|"=="|"
 			}
 }
 
-{num}  os << "DEC\t" << '"' << YYText() << '"' << '\n';
+{num}  {int n = atoi(yytext); yylval.number = n; return NUM;}
 
-{var}    os << "ID\t" << '"' << YYText() << '"' << '\n';
+{var}   {yylval.name = new std::string(yytext, yyleng); return IDENTIFIER;}
 
-.	os << "ERROR\t" << '"' << YYText() << '"' << '\n'; 
+.	return 1;
 
 %%
-
-int main( int /* argc */, char**  argv )
-	{
-	fb.open(argv[1], std::ios::in);
-	os.open(argv[2]);
-	std::istream is(&fb);
-	FlexLexer* lexer = new yyFlexLexer;
-	lexer->yy_switch_to_buffer(lexer->yy_create_buffer(&is,YY_BUF_SIZE));
-	while(lexer->yylex() != 0)
-		;
-	fb.close();
-	os.close();
-	return 0;
-}
