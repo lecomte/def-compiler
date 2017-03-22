@@ -26,6 +26,6 @@ int main( int argc, char *argv[] ) {
 		yyerror("Program lacks main function");
 		return 1;
 	}
-	out << ast->print() << std::endl;
+	ast->codeGen(out);
 	return 0;
 }
