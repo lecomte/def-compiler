@@ -1,5 +1,5 @@
 #include <bits/stdc++.h>
-#include "classes.h"	
+#include "classes.hpp"	
 #include "check.hpp"	
 
 bool ftype;

@@ -1,7 +1,7 @@
 %{
 #include <bits/stdc++.h>
 #include <vector>
-#include "classes.h"
+#include "classes.hpp"
 #include "check.hpp"
 
 extern int yylex();
