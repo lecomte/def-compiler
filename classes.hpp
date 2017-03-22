@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+#include <iostream>
 #ifndef CLASSES_H
 #define CLASSES_H
 
@@ -7,21 +8,21 @@ class Expression {
 	public:
 		virtual ~Expression() {}
 		std::string print(Expression *a);
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 class Statement : public Expression {
 	public:
 		virtual ~Statement() {}
 		std::string print(Statement *a);
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 class Declaration {
 	public:
 		virtual ~Declaration() {}
 		std::string print(Declaration *a);
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 
@@ -39,7 +40,7 @@ class Operator {
 		std::string print() {
 			return op;
 		}
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 class Program {
@@ -56,7 +57,7 @@ class Program {
 			s += "]";
 			return s;
 		}
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 class DecVar : public Declaration {
@@ -68,7 +69,7 @@ class DecVar : public Declaration {
 			std::string s = "[decvar [" + identificator + "]]";
 			return s;
 		}
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 
@@ -82,7 +83,7 @@ class Var : public Expression {
 			std::string s = "[" + name + "]";
 			return s;
 		}
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 class DecVarE : public DecVar {
@@ -94,7 +95,7 @@ class DecVarE : public DecVar {
 			std::string s = "[decvar [" + DecVar::identificator + "] " + assignExpression.print(&assignExpression) + "]";
 			return s;
 		}
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 class Block {
@@ -105,7 +106,7 @@ class Block {
 			return s;
 		}
 		std::string print(Block *);
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 class BlockDS : public Block {
@@ -127,7 +128,7 @@ class BlockDS : public Block {
 			s += "]";
 			return s;
 		}
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 class BlockD : public Block {
@@ -144,7 +145,7 @@ class BlockD : public Block {
 			s += "]";
 			return s;
 		}
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 class BlockS : public Block {
@@ -161,7 +162,7 @@ class BlockS : public Block {
 			s += "]";
 			return s;
 		}
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 class DecFunc : public Declaration {
@@ -177,7 +178,7 @@ class DecFunc : public Declaration {
 			s += "]";
 			return s;
 		}
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 class DecFuncP : public DecFunc {
@@ -196,7 +197,7 @@ class DecFuncP : public DecFunc {
 			s += "]";
 			return s;
 		}
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 class BinOperation : public Expression {
@@ -210,7 +211,7 @@ class BinOperation : public Expression {
 			s += "]";
 			return s;
 		}
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 class UnOperation : public Expression {
@@ -224,7 +225,7 @@ class UnOperation : public Expression {
 			s += "]";
 			return s;
 		}
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 class FuncCall : public Statement {
@@ -243,7 +244,7 @@ class FuncCall : public Statement {
 			s += "]";
 			return s;
 		}
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 class Integer : public Expression {
@@ -256,7 +257,7 @@ class Integer : public Expression {
 			s += "]";
 			return s;
 		}
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 class Assignment : public Statement {
@@ -270,7 +271,7 @@ class Assignment : public Statement {
 			s += "]";
 			return s;
 		}
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 class Return : public Statement {
@@ -282,7 +283,7 @@ class Return : public Statement {
 			std::string s = "[return " + value.print(&value) + "]";
 			return s;
 		}
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 class ReturnV : public Statement {
@@ -291,7 +292,7 @@ class ReturnV : public Statement {
 			std::string s = "[return ]";
 			return s;
 		}
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 class IfE : public Statement {
@@ -304,7 +305,7 @@ class IfE : public Statement {
 			std::string s = "[if "+ condition.print(&condition) + " " + yes.print(&yes) + " " + no.print(&no) +"]";
 			return s;
 		}
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 class If : public Statement {
@@ -317,7 +318,7 @@ class If : public Statement {
 			std::string s = "[if "+ condition.print(&condition) + " " + yes.print(&yes) + "]";
 			return s;
 		}
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 class While : public Statement {
@@ -330,7 +331,7 @@ class While : public Statement {
 			std::string s = "[while "+ condition.print(&condition) + " " + exec.print(&exec) + "]";
 			return s;
 		}
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 class Continue : public Statement {
@@ -339,7 +340,7 @@ class Continue : public Statement {
 			std::string s = "[continue ]";
 			return s;
 		}
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 class Break : public Statement {
@@ -348,7 +349,7 @@ class Break : public Statement {
 			std::string s = "[break ]";
 			return s;
 		}
-		void codeGen(ofstream &out);
+		void codeGen(std::ofstream &out);
 };
 
 class KeepFunc {
