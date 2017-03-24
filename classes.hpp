@@ -63,7 +63,8 @@ class Program {
 class DecVar : public Declaration {
 	public:
 		std::string identificator;
-		DecVar(std::string i) : identificator(i) {}
+		int i;
+		DecVar(std::string i) : identificator(i), i(0) {}
 	public:
 		std::string print() {
 			std::string s = "[decvar [" + identificator + "]]";
