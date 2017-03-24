@@ -1,6 +1,8 @@
 #include <bits/stdc++.h>
 #include "classes.hpp"
 
+int varid = 0;
+
 void Program::codeGen(std::ofstream &out) {
 	out << ".data" << std::endl;
 	out << ".align 2" << std::endl;
@@ -19,9 +21,10 @@ void Program::codeGen(std::ofstream &out) {
 				out << "\t" << "syscall" << std::endl;
 				break;
 			}
+			else df->codeGen(out);
 		}
 	}
-	out << "print:" << std::endl;
+	out << "funcprint:" << std::endl;
 	out << "\taddiu $fp, $sp, 0" << std::endl;
 	out << "\tsw $ra, 0($sp)" << std::endl;
 	out << "\taddiu $sp, $sp, -4" << std::endl;
@@ -38,16 +41,20 @@ void Program::codeGen(std::ofstream &out) {
 }
 
 void DecFunc::codeGen(std::ofstream &out) {
-	out << this->identificator << ":" << std::endl;
-	if (this->identificator == "main") out << "move $fp, $sp" << std::endl;
+	out << (this->identificator == "main" ? "" : "func") << this->identificator << ":" << std::endl;
+	if (this->identificator == "main") out << "\tmove $fp, $sp" << std::endl;
+	else {
+		out << "\taddiu $fp, $sp, 0" << std::endl;
+		out << "\tsw $ra, 0($sp)" << std::endl;
+		out << "\taddiu $sp, $sp, -4" << std::endl;
+	}
 	if (BlockDS *b = dynamic_cast<BlockDS *>(&(this->block))) {
-		int i = 0;
 		for (Declaration *d : b->decs) {
 			if (DecVarE *dv = dynamic_cast<DecVarE *>(d)) {
 				dv->codeGen(out);
 				out << "\tsw $a0, 0($sp)" << std::endl;
 				out << "\taddiu $sp, $sp, -4" << std::endl;
-				dynamic_cast<DecVar *>(dv)->i = i++;
+				dynamic_cast<DecVar *>(dv)->i = varid++;
 			}
 		}
 		for (Statement *s : b->statements) {
@@ -56,6 +63,30 @@ void DecFunc::codeGen(std::ofstream &out) {
 			}
 		}
 	}
+	else if (BlockD *b = dynamic_cast<BlockD *>(&(this->block))) {
+		for (Declaration *d : b->decs) {
+			if (DecVarE *dv = dynamic_cast<DecVarE *>(d)) {
+				dv->codeGen(out);
+				out << "\tsw $a0, 0($sp)" << std::endl;
+				out << "\taddiu $sp, $sp, -4" << std::endl;
+				dynamic_cast<DecVar *>(dv)->i = varid++;
+			}
+		}
+	}
+	else if (BlockS *b = dynamic_cast<BlockS *>(&(this->block))) {
+		for (Statement *s : b->statements) {
+			if (FuncCall *f = dynamic_cast<FuncCall *>(s)) {
+				f->codeGen(out);
+			}
+		}
+	}
+	if (this->identificator != "main") {
+		out << "\tlw $ra, 4($sp)" << std::endl;
+		out << "\taddiu $sp, $sp, 8" << std::endl;
+		out << "\tlw $fp, 0($sp)" << std::endl;
+	}
+	if (this->type.t == 1 && this->identificator != "main") out << "\taddiu $v0, $a0, 0" << std::endl;
+	if (this->identificator != "main") out << "\tjr $ra" << std::endl;
 }
 
 void DecVarE::codeGen(std::ofstream &out) {
@@ -77,8 +108,13 @@ void FuncCall::codeGen(std::ofstream &out) {
 			out << "\tsw $a0, 0($sp)" << std::endl;
 			out << "\taddiu $sp, $sp, -4" << std::endl;
 		}
+		else if (Integer *i = dynamic_cast<Integer *>(*it)) {
+			i->codeGen(out);
+			out << "\tsw $a0, 0($sp)" << std::endl;
+			out << "\taddiu $sp, $sp, -4" << std::endl;
+		}
 	}
-	out << "\tjal " << this->identifier << std::endl;
+	out << "\tjal " << "func" << this->identifier << std::endl;
 	
 }
 
