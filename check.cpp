@@ -169,8 +169,12 @@ bool ftype;
 			for (Declaration *d : *(*it)) {
 				if (v->name == dynamic_cast<DecVar *>(d)->identificator) {
 					de = d;
+					v->dv = dynamic_cast<DecVar *>(d);
+					break;
 				}
 			}
+			if (de != NULL)
+				break;
 		}
 		if (de == NULL) {
 			yyerror("Variable not declared");

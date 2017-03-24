@@ -76,8 +76,9 @@ class DecVar : public Declaration {
 class Var : public Expression {
 	public:
 		std::string name;
-		Var(std::string n) : name(n) {}
-		Var(DecVar d) : name(d.identificator) {}
+		DecVar* dv;
+		Var(std::string n) : name(n), dv(NULL) {}
+		Var(DecVar &d) : name(d.identificator), dv(NULL) {}
 	public:
 		std::string print() {
 			std::string s = "[" + name + "]";
