@@ -103,7 +103,11 @@ void DecFunc::codeGen(std::ofstream &out) {
 		}
 	}
 	out << "\tlw $ra, " << 4 + varid.back() * 4 << "($sp)" << std::endl;
-	out << "\taddiu $sp, $sp, " << 8 + varid.back() * 4 << std::endl;
+	if (DecFuncP *dfp = dynamic_cast<DecFuncP *>(this)) {
+		out << "\taddiu $sp, $sp, " << 8 + (varid.back() + dfp->params.size()) * 4 << std::endl;
+	}
+	else
+		out << "\taddiu $sp, $sp, " << 8 + varid.back() * 4 << std::endl;
 	out << "\tlw $fp, 0($sp)" << std::endl;
 	if (this->type.t == 1 && this->identificator != "main") out << "\taddiu $v0, $a0, 0" << std::endl;
 	if (this->identificator != "main") {
