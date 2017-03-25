@@ -31,8 +31,9 @@ bool ftype;
         ftype = (df->type.t == 1);
         scopus.push_back(new std::vector<Declaration *>);
         if (DecFuncP *dfp = dynamic_cast<DecFuncP *>(df)) {
+        	int i = -2;
 			for (Var *v : dfp->params) {
-				checkSym(new DecVar(v->name));
+				checkSym(new DecVar(v->name, i--));
 			}
 		}
 		checkSym(&(df->block), false);
