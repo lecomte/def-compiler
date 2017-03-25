@@ -105,12 +105,7 @@ void DecFunc::codeGen(std::ofstream &out) {
 			}
 		}
 		for (Statement *s : b->statements) {
-			if (FuncCall *f = dynamic_cast<FuncCall *>(s)) {
-				f->codeGen(out);
-			}
-			else if (Assignment *f = dynamic_cast<Assignment *>(s)) {
-				f->codeGen(out);
-			}
+			s->codeGen(out);
 		}
 	}
 	else if (BlockD *b = dynamic_cast<BlockD *>(&(this->block))) {
@@ -129,12 +124,7 @@ void DecFunc::codeGen(std::ofstream &out) {
 	}
 	else if (BlockS *b = dynamic_cast<BlockS *>(&(this->block))) {
 		for (Statement *s : b->statements) {
-			if (FuncCall *f = dynamic_cast<FuncCall *>(s)) {
-				f->codeGen(out);
-			}
-			else if (Assignment *f = dynamic_cast<Assignment *>(s)) {
-				f->codeGen(out);
-			}
+			s->codeGen(out);
 		}
 	}
 	out << "\tlw $ra, " << 4 + varid.back() * 4 << "($sp)" << std::endl;
@@ -161,6 +151,15 @@ void DecVar::codeGen(std::ofstream &out) {
 
 void Integer::codeGen(std::ofstream &out) {
 	out << "\tli $a0, " << this->number << std::endl;
+}
+
+void Statement::codeGen(std::ofstream &out) {
+	if (FuncCall *f = dynamic_cast<FuncCall *>(this)) {
+		f->codeGen(out);
+	}
+	else if (Assignment *f = dynamic_cast<Assignment *>(this)) {
+		f->codeGen(out);
+	}
 }
 
 void Expression::codeGen(std::ofstream &out) {
