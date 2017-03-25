@@ -332,7 +332,8 @@ class While : public Statement {
 	public:
 		Expression &condition;
 		Block &exec;
-		While(Expression &c, Block &e) : condition(c), exec(e) {}
+		int id;
+		While(Expression &c, Block &e) : condition(c), exec(e), id(0) {}
 	public:
 		std::string print() {
 			std::string s = "[while "+ condition.print(&condition) + " " + exec.print(&exec) + "]";
