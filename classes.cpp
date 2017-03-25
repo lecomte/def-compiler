@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 #include "classes.hpp"
 
-int varid = 0;
+std::vector<int> varid;
 
 void Program::codeGen(std::ofstream &out) {
 	out << ".data" << std::endl;
@@ -41,20 +41,18 @@ void Program::codeGen(std::ofstream &out) {
 }
 
 void DecFunc::codeGen(std::ofstream &out) {
+	varid.push_back(0);
 	out << (this->identificator == "main" ? "" : "func") << this->identificator << ":" << std::endl;
-	if (this->identificator == "main") out << "\tmove $fp, $sp" << std::endl;
-	else {
 		out << "\taddiu $fp, $sp, 0" << std::endl;
 		out << "\tsw $ra, 0($sp)" << std::endl;
 		out << "\taddiu $sp, $sp, -4" << std::endl;
-	}
 	if (BlockDS *b = dynamic_cast<BlockDS *>(&(this->block))) {
 		for (Declaration *d : b->decs) {
 			if (DecVarE *dv = dynamic_cast<DecVarE *>(d)) {
 				dv->codeGen(out);
 				out << "\tsw $a0, 0($sp)" << std::endl;
 				out << "\taddiu $sp, $sp, -4" << std::endl;
-				dynamic_cast<DecVar *>(dv)->i = varid++;
+				dynamic_cast<DecVar *>(dv)->i = varid.back()++;
 			}
 		}
 		for (Statement *s : b->statements) {
@@ -69,7 +67,7 @@ void DecFunc::codeGen(std::ofstream &out) {
 				dv->codeGen(out);
 				out << "\tsw $a0, 0($sp)" << std::endl;
 				out << "\taddiu $sp, $sp, -4" << std::endl;
-				dynamic_cast<DecVar *>(dv)->i = varid++;
+				dynamic_cast<DecVar *>(dv)->i = varid.back()++;
 			}
 		}
 	}
@@ -80,13 +78,14 @@ void DecFunc::codeGen(std::ofstream &out) {
 			}
 		}
 	}
-	if (this->identificator != "main") {
-		out << "\tlw $ra, 4($sp)" << std::endl;
-		out << "\taddiu $sp, $sp, 8" << std::endl;
+		out << "\tlw $ra, " << 4 + varid.back() * 4 << "($sp)" << std::endl;
+		out << "\taddiu $sp, $sp, " << 8 + varid.back() * 4 << std::endl;
 		out << "\tlw $fp, 0($sp)" << std::endl;
-	}
 	if (this->type.t == 1 && this->identificator != "main") out << "\taddiu $v0, $a0, 0" << std::endl;
-	if (this->identificator != "main") out << "\tjr $ra" << std::endl;
+	if (this->identificator != "main") {
+		out << "\tjr $ra" << std::endl;
+		varid.pop_back();
+	}
 }
 
 void DecVarE::codeGen(std::ofstream &out) {
@@ -119,5 +118,5 @@ void FuncCall::codeGen(std::ofstream &out) {
 }
 
 void Var::codeGen(std::ofstream &out) {
-	out << "\tlw $a0," << -4 * this->dv->i << "($fp)" << std::endl;
+	out << "\tlw $a0," << -4 * (this->dv->i + 1) << "($fp)" << std::endl;
 }
