@@ -16,6 +16,7 @@ class Statement : public Expression {
 		virtual ~Statement() {}
 		std::string print(Statement *a);
 		void codeGen(std::ofstream &out);
+		void codeGen(std::ofstream &out, bool a);
 };
 
 class Declaration {
@@ -303,7 +304,8 @@ class IfE : public Statement {
 	public:
 		Expression &condition;
 		Block &yes, &no;
-		IfE(Expression &c, Block &y, Block &n) : condition(c), yes(y), no(n) {}
+		int id;
+		IfE(Expression &c, Block &y, Block &n) : condition(c), yes(y), no(n), id(0) {}
 	public:
 		std::string print() {
 			std::string s = "[if "+ condition.print(&condition) + " " + yes.print(&yes) + " " + no.print(&no) +"]";
@@ -315,8 +317,9 @@ class IfE : public Statement {
 class If : public Statement {
 	public:
 		Expression &condition;
+		int id;
 		Block &yes;
-		If(Expression &c, Block &y) : condition(c), yes(y) {}
+		If(Expression &c, Block &y) : condition(c), yes(y), id(0) {}
 	public:
 		std::string print() {
 			std::string s = "[if "+ condition.print(&condition) + " " + yes.print(&yes) + "]";
