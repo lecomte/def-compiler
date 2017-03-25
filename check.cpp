@@ -76,6 +76,22 @@ bool ftype;
 	}
 	void checkSym(Statement *s, bool f) {
 		if (Assignment *ass = dynamic_cast<Assignment *>(s)) {
+			Declaration *de = NULL;
+			for (std::vector<std::vector<Declaration *> *>::reverse_iterator it = scopus.rbegin(); it != scopus.rend(); it++) {
+				for (Declaration *d : *(*it)) {
+					if (ass->identifier == dynamic_cast<DecVar *>(d)->identificator) {
+						de = d;
+						ass->dv = dynamic_cast<DecVar *>(d);
+						break;
+					}
+				}
+				if (de != NULL)
+					break;
+			}
+			if (de == NULL) {
+				yyerror("Variable not declared");
+				return;
+			}
 			checkSym(&(ass->value));
 		}
 		else if (FuncCall *fc = dynamic_cast<FuncCall *>(s)) {
