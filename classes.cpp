@@ -117,12 +117,7 @@ void DecFunc::codeGen(std::ofstream &out) {
 }
 
 void DecVarE::codeGen(std::ofstream &out) {
-	if (Integer *i = dynamic_cast<Integer *>(&(this->assignExpression))) {
-		i->codeGen(out);
-	}
-	else if (Var *v = dynamic_cast<Var *>(&(this->assignExpression))) {
-		v->codeGen(out);
-	}
+	this->assignExpression.codeGen(out);
 }
 
 void DecVar::codeGen(std::ofstream &out) {
@@ -133,20 +128,48 @@ void Integer::codeGen(std::ofstream &out) {
 	out << "\tli $a0, " << this->number << std::endl;
 }
 
+void Expression::codeGen(std::ofstream &out) {
+	if (Var *v = dynamic_cast<Var *>(this)) {
+		v->codeGen(out);
+	}
+	else if (Integer *i = dynamic_cast<Integer *>(this)) {
+		i->codeGen(out);
+	}
+	else if (BinOperation *b = dynamic_cast<BinOperation *>(this)) {
+		b->codeGen(out);
+	}
+}
+
+void BinOperation::codeGen(std::ofstream &out) {
+	this->first.codeGen(out);
+	out << "\tsw $a0, 0($sp)" << std::endl;
+	out << "\taddiu $sp, $sp, -4" << std::endl;
+	this->second.codeGen(out);
+	out << "\tlw $t1, 4($sp)" << std::endl;
+	if (op == "+") {
+		out << "\tadd $a0, $a0, $t1" << std::endl;
+	}
+	else if (op == "-") {
+		out << "\tsub $a0, $t1, $a0" << std::endl;
+	}
+	else if (op == "*") {
+		out << "\tmult $a0, $t1" << std::endl;
+		out << "\tmflo $a0" << std::endl;
+	}
+	else if (op == "/") {
+		out << "\tdiv $t1, $a0" << std::endl;
+		out << "\tmflo $a0" << std::endl;
+	}
+	out << "\taddiu $sp, $sp, 4" << std::endl;
+}
+
 void FuncCall::codeGen(std::ofstream &out) {
 	out << "\tsw $fp, 0($sp)" << std::endl;
 	out << "\taddiu $sp, $sp, -4" << std::endl;
 	for (std::vector<Expression *>::reverse_iterator it = this->args.rbegin(); it != args.rend(); it++) {
-		if (Var *v = dynamic_cast<Var *>(*it)) {
-			v->codeGen(out);
-			out << "\tsw $a0, 0($sp)" << std::endl;
-			out << "\taddiu $sp, $sp, -4" << std::endl;
-		}
-		else if (Integer *i = dynamic_cast<Integer *>(*it)) {
-			i->codeGen(out);
-			out << "\tsw $a0, 0($sp)" << std::endl;
-			out << "\taddiu $sp, $sp, -4" << std::endl;
-		}
+		(*it)->codeGen(out);
+		out << "\tsw $a0, 0($sp)" << std::endl;
+		out << "\taddiu $sp, $sp, -4" << std::endl;
 	}
 	out << "\tjal " << "func" << this->identifier << std::endl;
 	
@@ -161,12 +184,7 @@ void Var::codeGen(std::ofstream &out) {
 }
 
 void Assignment::codeGen(std::ofstream &out) {
-	if (Var *v = dynamic_cast<Var *>(&(this->value))) {
-		v->codeGen(out);
-	}
-	else if (Integer *i = dynamic_cast<Integer *>(&(this->value))) {
-		i->codeGen(out);
-	}
+	this->value.codeGen(out);
 	if (this->dv->i == -1)
 		out << "\tsw $a0," << "var" + this->identifier << std::endl;
 	else
