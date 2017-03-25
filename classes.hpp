@@ -265,8 +265,9 @@ class Integer : public Expression {
 class Assignment : public Statement {
 	public:
 		std::string identifier;
+		DecVar *dv;
 		Expression &value;
-		Assignment(std::string i, Expression &v) : identifier(i), value(v) {}
+		Assignment(std::string i, Expression &v) : identifier(i), value(v), dv(NULL) {}
 	public:
 		std::string print() {
 			std::string s = "[assign [" + identifier + "] " + value.print(&value);
