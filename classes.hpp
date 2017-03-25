@@ -65,6 +65,7 @@ class DecVar : public Declaration {
 		std::string identificator;
 		int i;
 		DecVar(std::string i) : identificator(i), i(0) {}
+		DecVar(std::string i, int id) : identificator(i), i(id) {}
 	public:
 		std::string print() {
 			std::string s = "[decvar [" + identificator + "]]";
