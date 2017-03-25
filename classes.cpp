@@ -42,6 +42,41 @@ void Program::codeGen(std::ofstream &out) {
 	out << "\taddiu $sp, $sp, 12" << std::endl;
 	out << "\tlw $fp, 0($sp)" << std::endl;
 	out << "\tjr $ra" << std::endl;
+	out << "true:" << std::endl;
+	out << "\tli $a0, 1" << std::endl;
+	out << "\tjr $ra" << std::endl;
+	out << "false:" << std::endl;
+	out << "\tli $a0, 0" << std::endl;
+	out << "\tjr $ra" << std::endl;
+	out << "greater:" << std::endl;
+	out << "\tbgt $t1, $a0, true" << std::endl;
+	out << "\tble $t1, $a0, false" << std::endl;
+	out << "greatereq:" << std::endl;
+	out << "\tbge $t1, $a0, true" << std::endl;
+	out << "\tblt $t1, $a0, false" << std::endl;
+	out << "less:" << std::endl;
+	out << "\tblt $t1, $a0, true" << std::endl;
+	out << "\tbge $t1, $a0, false" << std::endl;
+	out << "lesseq:" << std::endl;
+	out << "\tble $t1, $a0, true" << std::endl;
+	out << "\tbgt $t1, $a0, false" << std::endl;
+	out << "equal:" << std::endl;
+	out << "\tbeq $t1, $a0, true" << std::endl;
+	out << "\tbne $t1, $a0, false" << std::endl;
+	out << "diff:" << std::endl;
+	out << "\tbne $t1, $a0, true" << std::endl;
+	out << "\tbeq $t1, $a0, false" << std::endl;
+	out << "land:" << std::endl;
+	out << "\tbeq $t1, $zero, false" << std::endl;
+	out << "\tbeq $a0, $zero, false" << std::endl;
+	out << "\tj true" << std::endl;
+	out << "lor:" << std::endl;
+	out << "\tbne $t1, $zero, true" << std::endl;
+	out << "\tbne $a0, $zero, true" << std::endl;
+	out << "\tj false" << std::endl;
+	out << "lnot:" << std::endl;
+	out << "\tbne $a0, $zero, false" << std::endl;
+	out << "\tbeq $a0, $zero, true" << std::endl;
 }
 
 void DecFunc::codeGen(std::ofstream &out) {
@@ -138,6 +173,21 @@ void Expression::codeGen(std::ofstream &out) {
 	else if (BinOperation *b = dynamic_cast<BinOperation *>(this)) {
 		b->codeGen(out);
 	}
+	else if (UnOperation *u = dynamic_cast<UnOperation *>(this)) {
+		u->codeGen(out);
+	}
+}
+
+void UnOperation::codeGen(std::ofstream &out) {
+	this->exp.codeGen(out);
+	if (op == "!") {
+		out << "\tjal lnot" << std::endl;
+	}
+	else if (op == "-") {
+		out << "\tli $t1, -1" << std::endl;
+		out << "\tmult $a0, $t1" << std::endl;
+		out << "\tmflo $a0" << std::endl;
+	}
 }
 
 void BinOperation::codeGen(std::ofstream &out) {
@@ -159,6 +209,30 @@ void BinOperation::codeGen(std::ofstream &out) {
 	else if (op == "/") {
 		out << "\tdiv $t1, $a0" << std::endl;
 		out << "\tmflo $a0" << std::endl;
+	}
+	else if (op == ">") {
+		out << "\tjal greater" << std::endl;
+	}
+	else if (op == ">=") {
+		out << "\tjal greatereq" << std::endl;
+	}
+	else if (op == "<") {
+		out << "\tjal less" << std::endl;
+	}
+	else if (op == "<=") {
+		out << "\tjal lesseq" << std::endl;
+	}
+	else if (op == "==") {
+		out << "\tjal equal" << std::endl;
+	}
+	else if (op == "!=") {
+		out << "\tjal diff" << std::endl;
+	}
+	else if (op == "&&") {
+		out << "\tjal land" << std::endl;
+	}
+	else if (op == "||") {
+		out << "\tjal lor" << std::endl;
 	}
 	out << "\taddiu $sp, $sp, 4" << std::endl;
 }
