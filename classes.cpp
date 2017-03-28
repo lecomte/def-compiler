@@ -33,6 +33,7 @@ void Program::codeGen(std::ostream &out) {
 	for (std::string s : genBlock) {
 		out << s;
 	}
+	out << std::endl;
 	out << "funcprint:" << std::endl;
 	out << "\taddiu $fp, $sp, 0" << std::endl;
 	out << "\tsw $ra, 0($sp)" << std::endl;
@@ -47,38 +48,49 @@ void Program::codeGen(std::ostream &out) {
 	out << "\taddiu $sp, $sp, 12" << std::endl;
 	out << "\tlw $fp, 0($sp)" << std::endl;
 	out << "\tjr $ra" << std::endl;
+	out << std::endl;
 	out << "true:" << std::endl;
 	out << "\tli $a0, 1" << std::endl;
 	out << "\tjr $ra" << std::endl;
+	out << std::endl;
 	out << "false:" << std::endl;
 	out << "\tli $a0, 0" << std::endl;
 	out << "\tjr $ra" << std::endl;
+	out << std::endl;
 	out << "greater:" << std::endl;
 	out << "\tbgt $t1, $a0, true" << std::endl;
 	out << "\tble $t1, $a0, false" << std::endl;
+	out << std::endl;
 	out << "greatereq:" << std::endl;
 	out << "\tbge $t1, $a0, true" << std::endl;
 	out << "\tblt $t1, $a0, false" << std::endl;
+	out << std::endl;
 	out << "less:" << std::endl;
 	out << "\tblt $t1, $a0, true" << std::endl;
 	out << "\tbge $t1, $a0, false" << std::endl;
+	out << std::endl;
 	out << "lesseq:" << std::endl;
 	out << "\tble $t1, $a0, true" << std::endl;
 	out << "\tbgt $t1, $a0, false" << std::endl;
+	out << std::endl;
 	out << "equal:" << std::endl;
 	out << "\tbeq $t1, $a0, true" << std::endl;
 	out << "\tbne $t1, $a0, false" << std::endl;
+	out << std::endl;
 	out << "diff:" << std::endl;
 	out << "\tbne $t1, $a0, true" << std::endl;
 	out << "\tbeq $t1, $a0, false" << std::endl;
+	out << std::endl;
 	out << "land:" << std::endl;
 	out << "\tbeq $t1, $zero, false" << std::endl;
 	out << "\tbeq $a0, $zero, false" << std::endl;
 	out << "\tj true" << std::endl;
+	out << std::endl;
 	out << "lor:" << std::endl;
 	out << "\tbne $t1, $zero, true" << std::endl;
 	out << "\tbne $a0, $zero, true" << std::endl;
 	out << "\tj false" << std::endl;
+	out << std::endl;
 	out << "lnot:" << std::endl;
 	out << "\tbne $a0, $zero, false" << std::endl;
 	out << "\tbeq $a0, $zero, true" << std::endl;
@@ -87,6 +99,8 @@ void Program::codeGen(std::ostream &out) {
 void DecFunc::codeGen(std::ostream &out) {
 	varid.push_back(0);
 	std::stringstream cabou;
+	cabou << std::endl;
+	out << std::endl;
 	out << (this->identificator == "main" ? "" : "func") << this->identificator << ":" << std::endl;
 	
 	cabou << "end_" << (this->identificator == "main" ? "" : "func") << this->identificator << ":" << std::endl;
@@ -146,8 +160,6 @@ void DecFunc::codeGen(std::ostream &out) {
 	cabou << "\tlw $ra, " << 4 + varid.back() * 4 << "($sp)" << std::endl;
 	if (DecFuncP *dfp = dynamic_cast<DecFuncP *>(this)) {
 		cabou << "\taddiu $sp, $sp, " << 8 + (varid.back() + dfp->params.size()) * 4 << std::endl;
-		std::cout << varid.back() << std::endl;
-		std::cout << dfp->params.size() << std::endl;
 	}
 	else
 		cabou << "\taddiu $sp, $sp, " << 8 + varid.back() * 4 << std::endl;
@@ -188,13 +200,16 @@ void Statement::codeGen(std::ostream &out) {
 		f->id = ifid++;
 		f->codeGen(out);
 	}
+	else if (Return *r = dynamic_cast<Return *>(this)) {
+		r->codeGen(out);
+	}
 }
 
 void If::codeGen(std::ostream &out) {
 	varid.back()++;
 	
 	std::ostringstream ass, end;
-	
+	ass << std::endl;
 	ass << ("if_" + std::to_string(this->id) + ":\n");
 	ass << "\tsw $ra, 0($sp)" << std::endl;
 	ass << "\taddiu $sp, $sp, -4" << std::endl;
@@ -232,7 +247,7 @@ void If::codeGen(std::ostream &out) {
 				else {
 					ass << "\taddiu $sp, $sp, 4" << std::endl;
 				}
-				ass << "\tj " << "end_" << currfunc << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
 			}
 			else s->codeGen(ass);
 		}
@@ -270,7 +285,7 @@ void If::codeGen(std::ostream &out) {
 	}
 	ass << "\tj endif_" << this->id << std::endl;
 	genBlock.push_back(ass.str());
-	
+	end << std::endl;
 	end << "endif_" << this->id << ":" << std::endl;
 	if (BlockDS *b = dynamic_cast<BlockDS *>(&this->yes)) {
 		end << "\taddiu $sp, $sp," << 4 * (b->decs.size() + 1) << std::endl;
@@ -402,4 +417,10 @@ void Assignment::codeGen(std::ostream &out) {
 		out << "\tsw $a0," << "var" + this->identifier << std::endl;
 	else
 		out << "\tsw $a0," << -4 * (this->dv->i + 1) << "($fp)" << std::endl;
+}
+
+void Return::codeGen(std::ostream &out) {
+	this->value.codeGen(out);
+	out << "\tmove $v0, $a0" << std::endl;
+	out << "\tj " << "end_"  << currfunc << std::endl;
 }
