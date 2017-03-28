@@ -3,8 +3,12 @@
 
 std::vector<int> varid;
 std::vector<DecVarE *> globblock;
+std::vector<std::string> genBlock;
+std::vector<std::string> genWh;
+int ifid = 0, whileid = 0, sincefunc;
+std::string currfunc;
 
-void Program::codeGen(std::ofstream &out) {
+void Program::codeGen(std::ostream &out) {
 	out << ".data" << std::endl;
 	out << ".align 2" << std::endl;
 	for (Declaration *d : decs) {
@@ -21,12 +25,13 @@ void Program::codeGen(std::ofstream &out) {
 		if (DecFunc *df = dynamic_cast<DecFunc *>(d)) {
 			if (df->identificator == "main") {
 				df->codeGen(out);
-				out << "\t" << "li $v0, 10" << std::endl;
-				out << "\t" << "syscall" << std::endl;
 				break;
 			}
 			else df->codeGen(out);
 		}
+	}
+	for (std::string s : genBlock) {
+		out << s;
 	}
 	out << "funcprint:" << std::endl;
 	out << "\taddiu $fp, $sp, 0" << std::endl;
@@ -79,9 +84,14 @@ void Program::codeGen(std::ofstream &out) {
 	out << "\tbeq $a0, $zero, true" << std::endl;
 }
 
-void DecFunc::codeGen(std::ofstream &out) {
+void DecFunc::codeGen(std::ostream &out) {
 	varid.push_back(0);
+	std::stringstream cabou;
 	out << (this->identificator == "main" ? "" : "func") << this->identificator << ":" << std::endl;
+	
+	cabou << "end_" << (this->identificator == "main" ? "" : "func") << this->identificator << ":" << std::endl;
+	
+	currfunc = (this->identificator == "main" ? "" : "func") + this->identificator;
 	out << "\taddiu $fp, $sp, 0" << std::endl;
 	if (this->identificator == "main") {
 		for (DecVarE *dve : globblock) {
@@ -124,36 +134,163 @@ void DecFunc::codeGen(std::ofstream &out) {
 	}
 	else if (BlockS *b = dynamic_cast<BlockS *>(&(this->block))) {
 		for (Statement *s : b->statements) {
+			if (If *i = dynamic_cast<If *>(s)) {
+				sincefunc = varid.back();
+			}
+			else if (IfE *i = dynamic_cast<IfE *>(s)) {
+				sincefunc = varid.back();
+			}
 			s->codeGen(out);
 		}
 	}
-	out << "\tlw $ra, " << 4 + varid.back() * 4 << "($sp)" << std::endl;
+	cabou << "\tlw $ra, " << 4 + varid.back() * 4 << "($sp)" << std::endl;
 	if (DecFuncP *dfp = dynamic_cast<DecFuncP *>(this)) {
-		out << "\taddiu $sp, $sp, " << 8 + (varid.back() + dfp->params.size()) * 4 << std::endl;
+		cabou << "\taddiu $sp, $sp, " << 8 + (varid.back() + dfp->params.size()) * 4 << std::endl;
+		std::cout << varid.back() << std::endl;
+		std::cout << dfp->params.size() << std::endl;
 	}
 	else
-		out << "\taddiu $sp, $sp, " << 8 + varid.back() * 4 << std::endl;
-	out << "\tlw $fp, 0($sp)" << std::endl;
-	if (this->type.t == 1 && this->identificator != "main") out << "\taddiu $v0, $a0, 0" << std::endl;
+		cabou << "\taddiu $sp, $sp, " << 8 + varid.back() * 4 << std::endl;
+	cabou << "\tlw $fp, 0($sp)" << std::endl;
+	if (this->type.t == 1 && this->identificator != "main") cabou << "\taddiu $v0, $a0, 0" << std::endl;
 	if (this->identificator != "main") {
-		out << "\tjr $ra" << std::endl;
+		cabou << "\tjr $ra" << std::endl;
 		varid.pop_back();
 	}
+	out << "\tj " << "end_"  << (this->identificator == "main" ? "" : "func") << this->identificator << std::endl;
+	if (this->identificator == "main") {
+		cabou << "\t" << "li $v0, 10" << std::endl;
+		cabou << "\t" << "syscall" << std::endl;
+	} 
+	genBlock.push_back(cabou.str());
 }
 
-void DecVarE::codeGen(std::ofstream &out) {
+void DecVarE::codeGen(std::ostream &out) {
 	this->assignExpression.codeGen(out);
 }
 
-void DecVar::codeGen(std::ofstream &out) {
+void DecVar::codeGen(std::ostream &out) {
 	out << "\taddiu $sp, $sp, -4" << std::endl;
 }
 
-void Integer::codeGen(std::ofstream &out) {
+void Integer::codeGen(std::ostream &out) {
 	out << "\tli $a0, " << this->number << std::endl;
 }
 
-void Statement::codeGen(std::ofstream &out) {
+void Statement::codeGen(std::ostream &out) {
+	if (FuncCall *f = dynamic_cast<FuncCall *>(this)) {
+		f->codeGen(out);
+	}
+	else if (Assignment *f = dynamic_cast<Assignment *>(this)) {
+		f->codeGen(out);
+	}
+	else if (If *f = dynamic_cast<If *>(this)) {
+		f->id = ifid++;
+		f->codeGen(out);
+	}
+}
+
+void If::codeGen(std::ostream &out) {
+	varid.back()++;
+	
+	std::ostringstream ass, end;
+	
+	ass << ("if_" + std::to_string(this->id) + ":\n");
+	ass << "\tsw $ra, 0($sp)" << std::endl;
+	ass << "\taddiu $sp, $sp, -4" << std::endl;
+	if (BlockDS *b = dynamic_cast<BlockDS *>(&this->yes)) {
+		ass << "\taddiu $sp, $sp," << -4 * b->decs.size() << std::endl;
+	}
+	else if (BlockD *b = dynamic_cast<BlockD *>(&this->yes)) {
+		ass << "\taddiu $sp, $sp," << -4 * b->decs.size() << std::endl;
+	}
+	out << "\tjal " << "if_" << this->id << std::endl;
+	
+	this->condition.codeGen(ass);
+	ass << "\tbeq $a0, $zero, endif_" << this->id << std::endl;
+	if (BlockDS *b = dynamic_cast<BlockDS *>(&this->yes)) {
+		for (Declaration *d : b->decs) {
+			if (DecVar *dv = dynamic_cast<DecVar *>(d)) {
+				dv->i = varid.back()++;
+				if (DecVarE *dve = dynamic_cast<DecVarE *>(dv)) {
+					dve->codeGen(ass);
+					ass << "\tsw $a0," + std::to_string(-4 * (dv->i + 1)) + "($fp)\n";
+				}
+			}
+		}
+		for (Statement *s : b->statements) {
+			if (Return *r = dynamic_cast<Return *>(s)) {
+				r->value.codeGen(ass);
+				ass << "\tmove $v0, $a0" << std::endl;
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				if (BlockDS *b = dynamic_cast<BlockDS *>(&this->yes)) {
+					ass << "\taddiu $sp, $sp," << 4 * (b->decs.size() + 1) << std::endl;
+				}
+				else if (BlockD *b = dynamic_cast<BlockD *>(&this->yes)) {
+					ass << "\taddiu $sp, $sp," << 4 * (b->decs.size() + 1) << std::endl;
+				}
+				else {
+					ass << "\taddiu $sp, $sp, 4" << std::endl;
+				}
+				ass << "\tj " << "end_" << currfunc << std::endl;
+			}
+			else s->codeGen(ass);
+		}
+	}
+	else if (BlockD *b = dynamic_cast<BlockD *>(&this->yes)) {
+		for (Declaration *d : b->decs) {
+			if (DecVar *dv = dynamic_cast<DecVar *>(d)) {
+				dv->i = varid.back()++;
+				if (DecVarE *dve = dynamic_cast<DecVarE *>(dv)) {
+					dve->codeGen(ass);
+					ass << "\tsw $a0," + std::to_string(-4 * (dv->i + 1)) + "($fp)\n";
+				}
+			}
+		}
+	}
+	else if (BlockS *b = dynamic_cast<BlockS *>(&this->yes)) {
+		for (Statement *s : b->statements) {
+			if (Return *r = dynamic_cast<Return *>(s)) {
+				r->value.codeGen(ass);
+				ass << "\tmove $v0, $a0" << std::endl;
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				if (BlockDS *b = dynamic_cast<BlockDS *>(&this->yes)) {
+					ass << "\taddiu $sp, $sp," << 4 * (b->decs.size() + 1) << std::endl;
+				}
+				else if (BlockD *b = dynamic_cast<BlockD *>(&this->yes)) {
+					ass << "\taddiu $sp, $sp," << 4 * (b->decs.size() + 1) << std::endl;
+				}
+				else {
+					ass << "\taddiu $sp, $sp, 4" << std::endl;
+				}
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else s->codeGen(ass);
+		}
+	}
+	ass << "\tj endif_" << this->id << std::endl;
+	genBlock.push_back(ass.str());
+	
+	end << "endif_" << this->id << ":" << std::endl;
+	if (BlockDS *b = dynamic_cast<BlockDS *>(&this->yes)) {
+		end << "\taddiu $sp, $sp," << 4 * (b->decs.size() + 1) << std::endl;
+		varid.back() -= b->decs.size() + 1;
+	}
+	else if (BlockD *b = dynamic_cast<BlockD *>(&this->yes)) {
+		end << "\taddiu $sp, $sp," << 4 * (b->decs.size() + 1) << std::endl;
+		varid.back() -= b->decs.size() + 1;
+	}
+	else if (BlockS *b = dynamic_cast<BlockS *>(&this->yes)) {
+		end << "\taddiu $sp, $sp, 4" << std::endl;
+		varid.back() -= 1;
+	}
+	end << "\tlw $ra, 0($sp)" << std::endl;
+	end << "\tjr $ra" << std::endl;
+	
+	genBlock.push_back(end.str());
+}
+
+void Statement::codeGen(std::ostream &out, bool a) {
 	if (FuncCall *f = dynamic_cast<FuncCall *>(this)) {
 		f->codeGen(out);
 	}
@@ -162,7 +299,7 @@ void Statement::codeGen(std::ofstream &out) {
 	}
 }
 
-void Expression::codeGen(std::ofstream &out) {
+void Expression::codeGen(std::ostream &out) {
 	if (Var *v = dynamic_cast<Var *>(this)) {
 		v->codeGen(out);
 	}
@@ -175,9 +312,13 @@ void Expression::codeGen(std::ofstream &out) {
 	else if (UnOperation *u = dynamic_cast<UnOperation *>(this)) {
 		u->codeGen(out);
 	}
+	else if (FuncCall *f = dynamic_cast<FuncCall *>(this)) {
+		f->codeGen(out);
+		out << "\tmove $a0, $v0" << std::endl;
+	}
 }
 
-void UnOperation::codeGen(std::ofstream &out) {
+void UnOperation::codeGen(std::ostream &out) {
 	this->exp.codeGen(out);
 	if (op == "!") {
 		out << "\tjal lnot" << std::endl;
@@ -189,7 +330,7 @@ void UnOperation::codeGen(std::ofstream &out) {
 	}
 }
 
-void BinOperation::codeGen(std::ofstream &out) {
+void BinOperation::codeGen(std::ostream &out) {
 	this->first.codeGen(out);
 	out << "\tsw $a0, 0($sp)" << std::endl;
 	out << "\taddiu $sp, $sp, -4" << std::endl;
@@ -236,7 +377,7 @@ void BinOperation::codeGen(std::ofstream &out) {
 	out << "\taddiu $sp, $sp, 4" << std::endl;
 }
 
-void FuncCall::codeGen(std::ofstream &out) {
+void FuncCall::codeGen(std::ostream &out) {
 	out << "\tsw $fp, 0($sp)" << std::endl;
 	out << "\taddiu $sp, $sp, -4" << std::endl;
 	for (std::vector<Expression *>::reverse_iterator it = this->args.rbegin(); it != args.rend(); it++) {
@@ -245,10 +386,9 @@ void FuncCall::codeGen(std::ofstream &out) {
 		out << "\taddiu $sp, $sp, -4" << std::endl;
 	}
 	out << "\tjal " << "func" << this->identifier << std::endl;
-	
 }
 
-void Var::codeGen(std::ofstream &out) {
+void Var::codeGen(std::ostream &out) {
 	if (this->dv->i == -1) {
 		out << "\tlw $a0," << "var" + name << std::endl;
 	}
@@ -256,7 +396,7 @@ void Var::codeGen(std::ofstream &out) {
 		out << "\tlw $a0," << -4 * (this->dv->i + 1) << "($fp)" << std::endl;
 }
 
-void Assignment::codeGen(std::ofstream &out) {
+void Assignment::codeGen(std::ostream &out) {
 	this->value.codeGen(out);
 	if (this->dv->i == -1)
 		out << "\tsw $a0," << "var" + this->identifier << std::endl;
