@@ -129,6 +129,12 @@ void DecFunc::codeGen(std::ostream &out) {
 			}
 		}
 		for (Statement *s : b->statements) {
+			if (If *i = dynamic_cast<If *>(s)) {
+				sincefunc = varid.back();
+			}
+			else if (IfE *i = dynamic_cast<IfE *>(s)) {
+				sincefunc = varid.back();
+			}
 			s->codeGen(out);
 		}
 	}
@@ -157,13 +163,13 @@ void DecFunc::codeGen(std::ostream &out) {
 			s->codeGen(out);
 		}
 	}
-	cabou << "\tlw $ra, " << 4 + varid.back() * 4 << "($sp)" << std::endl;
+	cabou << "\tlw $ra, 0($fp)" << std::endl;
 	if (DecFuncP *dfp = dynamic_cast<DecFuncP *>(this)) {
 		cabou << "\taddiu $sp, $sp, " << 8 + (varid.back() + dfp->params.size()) * 4 << std::endl;
 	}
 	else
 		cabou << "\taddiu $sp, $sp, " << 8 + varid.back() * 4 << std::endl;
-	cabou << "\tlw $fp, 0($sp)" << std::endl;
+	if (this->identificator != "main") cabou << "\tlw $fp, 0($sp)" << std::endl;
 	if (this->type.t == 1 && this->identificator != "main") cabou << "\taddiu $v0, $a0, 0" << std::endl;
 	if (this->identificator != "main") {
 		cabou << "\tjr $ra" << std::endl;
@@ -214,10 +220,10 @@ void If::codeGen(std::ostream &out) {
 	ass << "\tsw $ra, 0($sp)" << std::endl;
 	ass << "\taddiu $sp, $sp, -4" << std::endl;
 	if (BlockDS *b = dynamic_cast<BlockDS *>(&this->yes)) {
-		ass << "\taddiu $sp, $sp," << -4 * b->decs.size() << std::endl;
+		ass << "\taddiu $sp, $sp," << -4 * (int) b->decs.size() << std::endl;
 	}
 	else if (BlockD *b = dynamic_cast<BlockD *>(&this->yes)) {
-		ass << "\taddiu $sp, $sp," << -4 * b->decs.size() << std::endl;
+		ass << "\taddiu $sp, $sp," << -4 * (int) b->decs.size() << std::endl;
 	}
 	out << "\tjal " << "if_" << this->id << std::endl;
 	
@@ -238,6 +244,7 @@ void If::codeGen(std::ostream &out) {
 				r->value.codeGen(ass);
 				ass << "\tmove $v0, $a0" << std::endl;
 				ass << "\tlw $ra, 0($fp)" << std::endl;
+				/*
 				if (BlockDS *b = dynamic_cast<BlockDS *>(&this->yes)) {
 					ass << "\taddiu $sp, $sp," << 4 * (b->decs.size() + 1) << std::endl;
 				}
@@ -247,6 +254,8 @@ void If::codeGen(std::ostream &out) {
 				else {
 					ass << "\taddiu $sp, $sp, 4" << std::endl;
 				}
+				*/
+				ass << "\taddiu $sp, $fp, " << 4 * (sincefunc - 1) << std::endl;
 				ass << "\tj " << "end_"  << currfunc << std::endl;
 			}
 			else s->codeGen(ass);
@@ -269,6 +278,7 @@ void If::codeGen(std::ostream &out) {
 				r->value.codeGen(ass);
 				ass << "\tmove $v0, $a0" << std::endl;
 				ass << "\tlw $ra, 0($fp)" << std::endl;
+				/*
 				if (BlockDS *b = dynamic_cast<BlockDS *>(&this->yes)) {
 					ass << "\taddiu $sp, $sp," << 4 * (b->decs.size() + 1) << std::endl;
 				}
@@ -278,6 +288,8 @@ void If::codeGen(std::ostream &out) {
 				else {
 					ass << "\taddiu $sp, $sp, 4" << std::endl;
 				}
+				*/
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
 				ass << "\tj " << "end_"  << currfunc << std::endl;
 			}
 			else s->codeGen(ass);
