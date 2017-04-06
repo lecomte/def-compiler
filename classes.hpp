@@ -312,6 +312,7 @@ class IfE : public Statement {
 			return s;
 		}
 		void codeGen(std::ostream &out);
+		void codeGen(std::ostream &out, std::string whileName);
 };
 
 class If : public Statement {
@@ -326,6 +327,7 @@ class If : public Statement {
 			return s;
 		}
 		void codeGen(std::ostream &out);
+		void codeGen(std::ostream &out, std::string whileName);
 };
 
 class While : public Statement {

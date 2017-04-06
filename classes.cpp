@@ -1,8 +1,8 @@
 #include <bits/stdc++.h>
 #include "classes.hpp"
 
-std::vector<int> varid;
-std::vector<DecVarE *> globblock;
+std::vector<int> varid, sinceWhile, sinceWhile2;
+std::vector<DecVar *> globblock;
 std::vector<std::string> genBlock;
 std::vector<std::string> genWh;
 int ifid = 0, whileid = 0, sincefunc;
@@ -15,8 +15,7 @@ void Program::codeGen(std::ostream &out) {
 		if (DecVar *dv = dynamic_cast<DecVar *>(d)) {
 			out << "var" << dv->identificator << ": .space 4" << std::endl;
 			dv->i = -1;
-			if (DecVarE *dve = dynamic_cast<DecVarE *>(dv))
-				globblock.push_back(dve);
+			globblock.push_back(dv);
 		}
 	}
 	out << ".text" << std::endl;
@@ -103,15 +102,22 @@ void DecFunc::codeGen(std::ostream &out) {
 	out << std::endl;
 	out << (this->identificator == "main" ? "" : "func") << this->identificator << ":" << std::endl;
 	
-	cabou << "end_" << (this->identificator == "main" ? "" : "func") << this->identificator << ":" << std::endl;
+	cabou << "end_" << "func" << this->identificator << ":" << std::endl;
 	
-	currfunc = (this->identificator == "main" ? "" : "func") + this->identificator;
+	currfunc = "func" + this->identificator;
 	out << "\taddiu $fp, $sp, 0" << std::endl;
 	if (this->identificator == "main") {
-		for (DecVarE *dve : globblock) {
-			dve->codeGen(out);
-			out << "\tsw $a0, " << "var" + dynamic_cast<DecVar *>(dve)->identificator << std::endl;
+		for (DecVar *dv : globblock) {
+			if (DecVarE *dve = dynamic_cast<DecVarE *>(dv))
+				dve->codeGen(out);
+			else {
+				out << "\tli $a0, 0" << std::endl;
+			}
+			out << "\tla $s0," << "var" + dv->identificator << std::endl;
+		out << "\tsw $a0, ($s0)" << std::endl;
 		}
+		out << std::endl << "\tj funcmain" << std::endl;
+		out << std::endl << "funcmain:" << std::endl;
 	}
 	out << "\tsw $ra, 0($sp)" << std::endl;
 	out << "\taddiu $sp, $sp, -4" << std::endl;
@@ -160,6 +166,9 @@ void DecFunc::codeGen(std::ostream &out) {
 			else if (IfE *i = dynamic_cast<IfE *>(s)) {
 				sincefunc = varid.back();
 			}
+			else if (While *i = dynamic_cast<While *>(s)) {
+				sincefunc = varid.back();
+			}
 			s->codeGen(out);
 		}
 	}
@@ -175,7 +184,7 @@ void DecFunc::codeGen(std::ostream &out) {
 		cabou << "\tjr $ra" << std::endl;
 		varid.pop_back();
 	}
-	out << "\tj " << "end_"  << (this->identificator == "main" ? "" : "func") << this->identificator << std::endl;
+	out << "\tj " << "end_"  << "func" << this->identificator << std::endl;
 	if (this->identificator == "main") {
 		cabou << "\t" << "li $v0, 10" << std::endl;
 		cabou << "\t" << "syscall" << std::endl;
@@ -188,6 +197,8 @@ void DecVarE::codeGen(std::ostream &out) {
 }
 
 void DecVar::codeGen(std::ostream &out) {
+	out << "\tli $a0, 0" << std::endl;
+	out << "\tsw $a0, 0($sp)" << std::endl;
 	out << "\taddiu $sp, $sp, -4" << std::endl;
 }
 
@@ -203,6 +214,14 @@ void Statement::codeGen(std::ostream &out) {
 		f->codeGen(out);
 	}
 	else if (If *f = dynamic_cast<If *>(this)) {
+		f->id = ifid++;
+		f->codeGen(out);
+	}
+	else if (IfE *f = dynamic_cast<IfE *>(this)) {
+		f->id = ifid++;
+		f->codeGen(out);
+	}
+	else if (While *f = dynamic_cast<While *>(this)) {
 		f->id = ifid++;
 		f->codeGen(out);
 	}
@@ -244,18 +263,12 @@ void If::codeGen(std::ostream &out) {
 				r->value.codeGen(ass);
 				ass << "\tmove $v0, $a0" << std::endl;
 				ass << "\tlw $ra, 0($fp)" << std::endl;
-				/*
-				if (BlockDS *b = dynamic_cast<BlockDS *>(&this->yes)) {
-					ass << "\taddiu $sp, $sp," << 4 * (b->decs.size() + 1) << std::endl;
-				}
-				else if (BlockD *b = dynamic_cast<BlockD *>(&this->yes)) {
-					ass << "\taddiu $sp, $sp," << 4 * (b->decs.size() + 1) << std::endl;
-				}
-				else {
-					ass << "\taddiu $sp, $sp, 4" << std::endl;
-				}
-				*/
-				ass << "\taddiu $sp, $fp, " << 4 * (sincefunc - 1) << std::endl;
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else if (ReturnV *r = dynamic_cast<ReturnV *>(s)) {
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
 				ass << "\tj " << "end_"  << currfunc << std::endl;
 			}
 			else s->codeGen(ass);
@@ -278,17 +291,11 @@ void If::codeGen(std::ostream &out) {
 				r->value.codeGen(ass);
 				ass << "\tmove $v0, $a0" << std::endl;
 				ass << "\tlw $ra, 0($fp)" << std::endl;
-				/*
-				if (BlockDS *b = dynamic_cast<BlockDS *>(&this->yes)) {
-					ass << "\taddiu $sp, $sp," << 4 * (b->decs.size() + 1) << std::endl;
-				}
-				else if (BlockD *b = dynamic_cast<BlockD *>(&this->yes)) {
-					ass << "\taddiu $sp, $sp," << 4 * (b->decs.size() + 1) << std::endl;
-				}
-				else {
-					ass << "\taddiu $sp, $sp, 4" << std::endl;
-				}
-				*/
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else if (ReturnV *r = dynamic_cast<ReturnV *>(s)) {
+				ass << "\tlw $ra, 0($fp)" << std::endl;
 				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
 				ass << "\tj " << "end_"  << currfunc << std::endl;
 			}
@@ -315,6 +322,644 @@ void If::codeGen(std::ostream &out) {
 	end << "\tjr $ra" << std::endl;
 	
 	genBlock.push_back(end.str());
+}
+
+void If::codeGen(std::ostream &out, std::string whileName) {
+	varid.back()++;
+	
+	std::ostringstream ass, end;
+	ass << std::endl;
+	ass << ("if_" + std::to_string(this->id) + ":\n");
+	ass << "\tsw $ra, 0($sp)" << std::endl;
+	ass << "\taddiu $sp, $sp, -4" << std::endl;
+	if (BlockDS *b = dynamic_cast<BlockDS *>(&this->yes)) {
+		ass << "\taddiu $sp, $sp," << -4 * (int) b->decs.size() << std::endl;
+	}
+	else if (BlockD *b = dynamic_cast<BlockD *>(&this->yes)) {
+		ass << "\taddiu $sp, $sp," << -4 * (int) b->decs.size() << std::endl;
+	}
+	out << "\tjal " << "if_" << this->id << std::endl;
+	
+	this->condition.codeGen(ass);
+	ass << "\tbeq $a0, $zero, endif_" << this->id << std::endl;
+	if (BlockDS *b = dynamic_cast<BlockDS *>(&this->yes)) {
+		for (Declaration *d : b->decs) {
+			if (DecVar *dv = dynamic_cast<DecVar *>(d)) {
+				dv->i = varid.back()++;
+				if (DecVarE *dve = dynamic_cast<DecVarE *>(dv)) {
+					dve->codeGen(ass);
+					ass << "\tsw $a0," + std::to_string(-4 * (dv->i + 1)) + "($fp)\n";
+				}
+			}
+		}
+		for (Statement *s : b->statements) {
+			if (Return *r = dynamic_cast<Return *>(s)) {
+				r->value.codeGen(ass);
+				ass << "\tmove $v0, $a0" << std::endl;
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else if (ReturnV *r = dynamic_cast<ReturnV *>(s)) {
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else if (Break *b = dynamic_cast<Break *>(s)) {
+				ass << "\taddiu $sp, $fp," << -4 * sinceWhile.back() + 4 << std::endl;
+				ass << "\tj endwhile_" << whileName << std::endl;
+			}
+			else if (Continue *b = dynamic_cast<Continue *>(s)) {
+				ass << "\taddiu $sp, $fp," << -4 * sinceWhile2.back() - 4 << std::endl;
+				ass << "\tj while_" << whileName << std::endl;
+			}
+			else if (IfE *i = dynamic_cast<IfE *>(s)) {
+				i->codeGen(ass, whileName);
+			}
+			else if (If *i = dynamic_cast<If *>(s)) {
+				i->codeGen(ass, whileName);
+			}
+			else s->codeGen(ass);
+		}
+	}
+	else if (BlockD *b = dynamic_cast<BlockD *>(&this->yes)) {
+		for (Declaration *d : b->decs) {
+			if (DecVar *dv = dynamic_cast<DecVar *>(d)) {
+				dv->i = varid.back()++;
+				if (DecVarE *dve = dynamic_cast<DecVarE *>(dv)) {
+					dve->codeGen(ass);
+					ass << "\tsw $a0," + std::to_string(-4 * (dv->i + 1)) + "($fp)\n";
+				}
+			}
+		}
+	}
+	else if (BlockS *b = dynamic_cast<BlockS *>(&this->yes)) {
+		for (Statement *s : b->statements) {
+			if (Return *r = dynamic_cast<Return *>(s)) {
+				r->value.codeGen(ass);
+				ass << "\tmove $v0, $a0" << std::endl;
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else if (ReturnV *r = dynamic_cast<ReturnV *>(s)) {
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else if (Break *b = dynamic_cast<Break *>(s)) {
+				ass << "\taddiu $sp, $fp," << -4 * sinceWhile.back() + 4 << std::endl;
+				ass << "\tj endwhile_" << whileName << std::endl;
+			}
+			else if (Continue *b = dynamic_cast<Continue *>(s)) {
+				ass << "\taddiu $sp, $fp," << -4 * sinceWhile2.back() - 4 << std::endl;
+				ass << "\tj while_" << whileName << std::endl;
+			}
+			else if (IfE *i = dynamic_cast<IfE *>(s)) {
+				i->codeGen(ass, whileName);
+			}
+			else if (If *i = dynamic_cast<If *>(s)) {
+				i->codeGen(ass, whileName);
+			}
+			else s->codeGen(ass);
+		}
+	}
+	ass << "\tj endif_" << this->id << std::endl;
+	genBlock.push_back(ass.str());
+	end << std::endl;
+	end << "endif_" << this->id << ":" << std::endl;
+	if (BlockDS *b = dynamic_cast<BlockDS *>(&this->yes)) {
+		end << "\taddiu $sp, $sp," << 4 * (b->decs.size() + 1) << std::endl;
+		varid.back() -= b->decs.size() + 1;
+	}
+	else if (BlockD *b = dynamic_cast<BlockD *>(&this->yes)) {
+		end << "\taddiu $sp, $sp," << 4 * (b->decs.size() + 1) << std::endl;
+		varid.back() -= b->decs.size() + 1;
+	}
+	else if (BlockS *b = dynamic_cast<BlockS *>(&this->yes)) {
+		end << "\taddiu $sp, $sp, 4" << std::endl;
+		varid.back() -= 1;
+	}
+	end << "\tlw $ra, 0($sp)" << std::endl;
+	end << "\tjr $ra" << std::endl;
+	
+	genBlock.push_back(end.str());
+}
+
+void IfE::codeGen(std::ostream &out) {
+	varid.back()++;
+	int by = 0, bn = 0;
+	std::ostringstream ass, end;
+	ass << std::endl;
+	ass << ("if_" + std::to_string(this->id) + ":\n");
+	ass << "\tsw $ra, 0($sp)" << std::endl;
+	ass << "\taddiu $sp, $sp, -4" << std::endl;
+	if (BlockDS *b = dynamic_cast<BlockDS *>(&this->yes)) {
+		by = -4 * (int) b->decs.size();
+	}
+	else if (BlockD *b = dynamic_cast<BlockD *>(&this->yes)) {
+		by = -4 * (int) b->decs.size();
+	}
+	if (BlockDS *b = dynamic_cast<BlockDS *>(&this->no)) {
+		bn = -4 * (int) b->decs.size();
+	}
+	else if (BlockD *b = dynamic_cast<BlockD *>(&this->no)) {
+		bn = -4 * (int) b->decs.size();
+	}
+	ass << "\taddiu $sp, $sp," << std::min(bn, by) << std::endl;
+	out << "\tjal " << "if_" << this->id << std::endl;
+	
+	this->condition.codeGen(ass);
+	ass << "\tbeq $a0, $zero, else_" << this->id << std::endl;
+	if (BlockDS *b = dynamic_cast<BlockDS *>(&this->yes)) {
+		for (Declaration *d : b->decs) {
+			if (DecVar *dv = dynamic_cast<DecVar *>(d)) {
+				dv->i = varid.back()++;
+				if (DecVarE *dve = dynamic_cast<DecVarE *>(dv)) {
+					dve->codeGen(ass);
+					ass << "\tsw $a0," + std::to_string(-4 * (dv->i + 1)) + "($fp)\n";
+				}
+			}
+		}
+		for (Statement *s : b->statements) {
+			if (Return *r = dynamic_cast<Return *>(s)) {
+				r->value.codeGen(ass);
+				ass << "\tmove $v0, $a0" << std::endl;
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else if (ReturnV *r = dynamic_cast<ReturnV *>(s)) {
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else s->codeGen(ass);
+		}
+	}
+	else if (BlockD *b = dynamic_cast<BlockD *>(&this->yes)) {
+		for (Declaration *d : b->decs) {
+			if (DecVar *dv = dynamic_cast<DecVar *>(d)) {
+				dv->i = varid.back()++;
+				if (DecVarE *dve = dynamic_cast<DecVarE *>(dv)) {
+					dve->codeGen(ass);
+					ass << "\tsw $a0," + std::to_string(-4 * (dv->i + 1)) + "($fp)\n";
+				}
+			}
+		}
+	}
+	else if (BlockS *b = dynamic_cast<BlockS *>(&this->yes)) {
+		for (Statement *s : b->statements) {
+			if (Return *r = dynamic_cast<Return *>(s)) {
+				r->value.codeGen(ass);
+				ass << "\tmove $v0, $a0" << std::endl;
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else if (ReturnV *r = dynamic_cast<ReturnV *>(s)) {
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else s->codeGen(ass);
+		}
+	}
+	if (BlockDS *b = dynamic_cast<BlockDS *>(&this->yes)) {
+		varid.back() -= b->decs.size();
+	}
+	else if (BlockD *b = dynamic_cast<BlockD *>(&this->yes)) {
+		varid.back() -= b->decs.size();
+	}
+	ass << "\tj endif_" << this->id << std::endl;
+	ass << std::endl;
+	ass << "else_" << this->id << ":" << std::endl;
+	if (BlockDS *b = dynamic_cast<BlockDS *>(&this->no)) {
+		for (Declaration *d : b->decs) {
+			if (DecVar *dv = dynamic_cast<DecVar *>(d)) {
+				dv->i = varid.back()++;
+				if (DecVarE *dve = dynamic_cast<DecVarE *>(dv)) {
+					dve->codeGen(ass);
+					ass << "\tsw $a0," + std::to_string(-4 * (dv->i + 1)) + "($fp)\n";
+				}
+			}
+		}
+		for (Statement *s : b->statements) {
+			if (Return *r = dynamic_cast<Return *>(s)) {
+				r->value.codeGen(ass);
+				ass << "\tmove $v0, $a0" << std::endl;
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << 4 * (sincefunc - 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else if (ReturnV *r = dynamic_cast<ReturnV *>(s)) {
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else s->codeGen(ass);
+		}
+	}
+	else if (BlockD *b = dynamic_cast<BlockD *>(&this->no)) {
+		for (Declaration *d : b->decs) {
+			if (DecVar *dv = dynamic_cast<DecVar *>(d)) {
+				dv->i = varid.back()++;
+				if (DecVarE *dve = dynamic_cast<DecVarE *>(dv)) {
+					dve->codeGen(ass);
+					ass << "\tsw $a0," + std::to_string(-4 * (dv->i + 1)) + "($fp)\n";
+				}
+			}
+		}
+	}
+	else if (BlockS *b = dynamic_cast<BlockS *>(&this->no)) {
+		for (Statement *s : b->statements) {
+			if (Return *r = dynamic_cast<Return *>(s)) {
+				r->value.codeGen(ass);
+				ass << "\tmove $v0, $a0" << std::endl;
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else if (ReturnV *r = dynamic_cast<ReturnV *>(s)) {
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else s->codeGen(ass);
+		}
+	}
+	if (BlockDS *b = dynamic_cast<BlockDS *>(&this->no)) {
+		varid.back() -= b->decs.size();
+	}
+	else if (BlockD *b = dynamic_cast<BlockD *>(&this->no)) {
+		varid.back() -= b->decs.size();
+	}
+	ass << "\tj endif_" << this->id << std::endl;
+	genBlock.push_back(ass.str());
+	end << std::endl;
+	end << "endif_" << this->id << ":" << std::endl;
+	varid.back()--;
+	end << "\taddiu $sp, $sp," << -1 * std::min(by,bn) + 4 << std::endl;
+	end << "\tlw $ra, 0($sp)" << std::endl;
+	end << "\tjr $ra" << std::endl;
+	
+	genBlock.push_back(end.str());
+}
+
+void IfE::codeGen(std::ostream &out, std::string whileName) {
+	this->id = ifid++;
+	varid.back()++;
+	int by = 0, bn = 0;
+	std::ostringstream ass, end;
+	ass << std::endl;
+	ass << ("if_" + std::to_string(this->id) + ":\n");
+	ass << "\tsw $ra, 0($sp)" << std::endl;
+	ass << "\taddiu $sp, $sp, -4" << std::endl;
+	if (BlockDS *b = dynamic_cast<BlockDS *>(&this->yes)) {
+		by = -4 * (int) b->decs.size();
+	}
+	else if (BlockD *b = dynamic_cast<BlockD *>(&this->yes)) {
+		by = -4 * (int) b->decs.size();
+	}
+	if (BlockDS *b = dynamic_cast<BlockDS *>(&this->no)) {
+		bn = -4 * (int) b->decs.size();
+	}
+	else if (BlockD *b = dynamic_cast<BlockD *>(&this->no)) {
+		bn = -4 * (int) b->decs.size();
+	}
+	ass << "\taddiu $sp, $sp," << std::min(bn, by) << std::endl;
+	out << "\tjal " << "if_" << this->id << std::endl;
+	
+	this->condition.codeGen(ass);
+	ass << "\tbeq $a0, $zero, else_" << this->id << std::endl;
+	if (BlockDS *b = dynamic_cast<BlockDS *>(&this->yes)) {
+		for (Declaration *d : b->decs) {
+			if (DecVar *dv = dynamic_cast<DecVar *>(d)) {
+				dv->i = varid.back()++;
+				if (DecVarE *dve = dynamic_cast<DecVarE *>(dv)) {
+					dve->codeGen(ass);
+					ass << "\tsw $a0," + std::to_string(-4 * (dv->i + 1)) + "($fp)\n";
+				}
+			}
+		}
+		for (Statement *s : b->statements) {
+			if (Return *r = dynamic_cast<Return *>(s)) {
+				r->value.codeGen(ass);
+				ass << "\tmove $v0, $a0" << std::endl;
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else if (ReturnV *r = dynamic_cast<ReturnV *>(s)) {
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else if (Break *b = dynamic_cast<Break *>(s)) {
+				ass << "\taddiu $sp, $fp," << -4 * sinceWhile.back() + 4 << std::endl;
+				ass << "\tj endwhile_" << whileName << std::endl;
+			}
+			else if (Continue *b = dynamic_cast<Continue *>(s)) {
+				ass << "\taddiu $sp, $fp," << -4 * sinceWhile2.back() - 4 << std::endl;
+				ass << "\tj while_" << whileName << std::endl;
+			}
+			else if (IfE *i = dynamic_cast<IfE *>(s)) {
+				i->codeGen(ass, whileName);
+			}
+			else if (If *i = dynamic_cast<If *>(s)) {
+				i->codeGen(ass, whileName);
+			}
+			else s->codeGen(ass);
+		}
+	}
+	else if (BlockD *b = dynamic_cast<BlockD *>(&this->yes)) {
+		for (Declaration *d : b->decs) {
+			if (DecVar *dv = dynamic_cast<DecVar *>(d)) {
+				dv->i = varid.back()++;
+				if (DecVarE *dve = dynamic_cast<DecVarE *>(dv)) {
+					dve->codeGen(ass);
+					ass << "\tsw $a0," + std::to_string(-4 * (dv->i + 1)) + "($fp)\n";
+				}
+			}
+		}
+	}
+	else if (BlockS *b = dynamic_cast<BlockS *>(&this->yes)) {
+		for (Statement *s : b->statements) {
+			if (Return *r = dynamic_cast<Return *>(s)) {
+				r->value.codeGen(ass);
+				ass << "\tmove $v0, $a0" << std::endl;
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else if (ReturnV *r = dynamic_cast<ReturnV *>(s)) {
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else if (Break *b = dynamic_cast<Break *>(s)) {
+				ass << "\taddiu $sp, $fp," << -4 * sinceWhile.back() + 4 << std::endl;
+				ass << "\tj endwhile_" << whileName << std::endl;
+			}
+			else if (Continue *b = dynamic_cast<Continue *>(s)) {
+				ass << "\taddiu $sp, $fp," << -4 * sinceWhile2.back() - 4 << std::endl;
+				ass << "\tj while_" << whileName << std::endl;
+			}
+			else if (IfE *i = dynamic_cast<IfE *>(s)) {
+				i->codeGen(ass, whileName);
+			}
+			else if (If *i = dynamic_cast<If *>(s)) {
+				i->codeGen(ass, whileName);
+			}
+			else s->codeGen(ass);
+		}
+	}
+	if (BlockDS *b = dynamic_cast<BlockDS *>(&this->yes)) {
+		varid.back() -= b->decs.size();
+	}
+	else if (BlockD *b = dynamic_cast<BlockD *>(&this->yes)) {
+		varid.back() -= b->decs.size();
+	}
+	ass << "\tj endif_" << this->id << std::endl;
+	ass << std::endl;
+	ass << "else_" << this->id << ":" << std::endl;
+	if (BlockDS *b = dynamic_cast<BlockDS *>(&this->no)) {
+		for (Declaration *d : b->decs) {
+			if (DecVar *dv = dynamic_cast<DecVar *>(d)) {
+				dv->i = varid.back()++;
+				if (DecVarE *dve = dynamic_cast<DecVarE *>(dv)) {
+					dve->codeGen(ass);
+					ass << "\tsw $a0," + std::to_string(-4 * (dv->i + 1)) + "($fp)\n";
+				}
+			}
+		}
+		for (Statement *s : b->statements) {
+			if (Return *r = dynamic_cast<Return *>(s)) {
+				r->value.codeGen(ass);
+				ass << "\tmove $v0, $a0" << std::endl;
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << 4 * (sincefunc - 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else if (ReturnV *r = dynamic_cast<ReturnV *>(s)) {
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else if (Break *b = dynamic_cast<Break *>(s)) {
+				ass << "\taddiu $sp, $fp," << -4 * sinceWhile.back() + 4 << std::endl;
+				ass << "\tj endwhile_" << whileName << std::endl;
+			}
+			else if (Continue *b = dynamic_cast<Continue *>(s)) {
+				ass << "\taddiu $sp, $fp," << -4 * sinceWhile2.back() - 4 << std::endl;
+				ass << "\tj while_" << whileName << std::endl;
+			}
+			else if (IfE *i = dynamic_cast<IfE *>(s)) {
+				i->codeGen(ass, whileName);
+			}
+			else if (If *i = dynamic_cast<If *>(s)) {
+				i->codeGen(ass, whileName);
+			}
+			else s->codeGen(ass);
+		}
+	}
+	else if (BlockD *b = dynamic_cast<BlockD *>(&this->no)) {
+		for (Declaration *d : b->decs) {
+			if (DecVar *dv = dynamic_cast<DecVar *>(d)) {
+				dv->i = varid.back()++;
+				if (DecVarE *dve = dynamic_cast<DecVarE *>(dv)) {
+					dve->codeGen(ass);
+					ass << "\tsw $a0," + std::to_string(-4 * (dv->i + 1)) + "($fp)\n";
+				}
+			}
+		}
+	}
+	else if (BlockS *b = dynamic_cast<BlockS *>(&this->no)) {
+		for (Statement *s : b->statements) {
+			if (Return *r = dynamic_cast<Return *>(s)) {
+				r->value.codeGen(ass);
+				ass << "\tmove $v0, $a0" << std::endl;
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else if (ReturnV *r = dynamic_cast<ReturnV *>(s)) {
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else if (Break *b = dynamic_cast<Break *>(s)) {
+				ass << "\taddiu $sp, $fp," << -4 * sinceWhile.back() + 4 << std::endl;
+				ass << "\tj endwhile_" << whileName << std::endl;
+			}
+			else if (Continue *b = dynamic_cast<Continue *>(s)) {
+				ass << "\taddiu $sp, $fp," << -4 * sinceWhile2.back() - 4 << std::endl;
+				ass << "\tj while_" << whileName << std::endl;
+			}
+			else if (IfE *i = dynamic_cast<IfE *>(s)) {
+				i->codeGen(ass, whileName);
+			}
+			else if (If *i = dynamic_cast<If *>(s)) {
+				i->codeGen(ass, whileName);
+			}
+			else s->codeGen(ass);
+		}
+	}
+	if (BlockDS *b = dynamic_cast<BlockDS *>(&this->no)) {
+		varid.back() -= b->decs.size();
+	}
+	else if (BlockD *b = dynamic_cast<BlockD *>(&this->no)) {
+		varid.back() -= b->decs.size();
+	}
+	ass << "\tj endif_" << this->id << std::endl;
+	genBlock.push_back(ass.str());
+	end << std::endl;
+	end << "endif_" << this->id << ":" << std::endl;
+	varid.back()--;
+	end << "\taddiu $sp, $sp," << -1 * std::min(by,bn) + 4 << std::endl;
+	end << "\tlw $ra, 0($sp)" << std::endl;
+	end << "\tjr $ra" << std::endl;
+	
+	genBlock.push_back(end.str());
+}
+
+void While::codeGen(std::ostream &out) {
+	varid.back()++;
+	sinceWhile.push_back(varid.back());
+	sinceWhile2.push_back(varid.back());
+	std::ostringstream ass, end;
+	ass << std::endl;
+	ass << ("while_" + std::to_string(this->id) + ":\n");
+	ass << "\tsw $ra, 0($sp)" << std::endl;
+	ass << "\taddiu $sp, $sp, -4" << std::endl;
+	if (BlockDS *b = dynamic_cast<BlockDS *>(&this->exec)) {
+		ass << "\taddiu $sp, $sp," << -4 * (int) b->decs.size() << std::endl;
+		sinceWhile.back() += (int) b->decs.size();
+	}
+	else if (BlockD *b = dynamic_cast<BlockD *>(&this->exec)) {
+		ass << "\taddiu $sp, $sp," << -4 * (int) b->decs.size() << std::endl;
+		sinceWhile.back() += (int) b->decs.size();
+	}
+	out << "\tjal " << "while_" << this->id << std::endl;
+	
+	this->condition.codeGen(ass);
+	ass << "\tbeq $a0, $zero, endwhile_" << this->id << std::endl;
+	if (BlockDS *b = dynamic_cast<BlockDS *>(&this->exec)) {
+		for (Declaration *d : b->decs) {
+			if (DecVar *dv = dynamic_cast<DecVar *>(d)) {
+				dv->i = varid.back()++;
+				if (DecVarE *dve = dynamic_cast<DecVarE *>(dv)) {
+					dve->codeGen(ass);
+					ass << "\tsw $a0," + std::to_string(-4 * (dv->i + 1)) + "($fp)\n";
+				}
+			}
+		}
+		for (Statement *s : b->statements) {
+			if (Return *r = dynamic_cast<Return *>(s)) {
+				r->value.codeGen(ass);
+				ass << "\tmove $v0, $a0" << std::endl;
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else if (ReturnV *r = dynamic_cast<ReturnV *>(s)) {
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else if (Break *r = dynamic_cast<Break *>(s)) {
+				ass << "\t j endwhile_" << this->id << std::endl;
+			}
+			else if (Continue *r = dynamic_cast<Continue *>(s)) {
+				if (BlockDS *b = dynamic_cast<BlockDS *>(&this->exec)) {
+					ass << "\taddiu $sp, $sp," << 4 * (b->decs.size()) << std::endl;
+				}
+				else if (BlockD *b = dynamic_cast<BlockD *>(&this->exec)) {
+					ass << "\taddiu $sp, $sp," << 4 * (b->decs.size()) << std::endl;
+				}
+				ass << "\taddiu $sp, $sp, 4" << std::endl;
+				ass << "\tlw $ra, 0($sp)" << std::endl;
+				ass << "\tj while_" << this->id << std::endl;
+			}
+			else if (IfE *i = dynamic_cast<IfE *>(s)) {
+				i->codeGen(ass, std::to_string(this->id));
+			}
+			else s->codeGen(ass);
+		}
+	}
+	else if (BlockD *b = dynamic_cast<BlockD *>(&this->exec)) {
+		for (Declaration *d : b->decs) {
+			if (DecVar *dv = dynamic_cast<DecVar *>(d)) {
+				dv->i = varid.back()++;
+				if (DecVarE *dve = dynamic_cast<DecVarE *>(dv)) {
+					dve->codeGen(ass);
+					ass << "\tsw $a0," + std::to_string(-4 * (dv->i + 1)) + "($fp)\n";
+				}
+			}
+		}
+	}
+	else if (BlockS *b = dynamic_cast<BlockS *>(&this->exec)) {
+		for (Statement *s : b->statements) {
+			if (Return *r = dynamic_cast<Return *>(s)) {
+				r->value.codeGen(ass);
+				ass << "\tmove $v0, $a0" << std::endl;
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else if (ReturnV *r = dynamic_cast<ReturnV *>(s)) {
+				ass << "\tlw $ra, 0($fp)" << std::endl;
+				ass << "\taddiu $sp, $fp, " << -4 * (sincefunc + 1) << std::endl;
+				ass << "\tj " << "end_"  << currfunc << std::endl;
+			}
+			else if (Break *r = dynamic_cast<Break *>(s)) {
+				ass << "\t j endwhile_" << this->id << std::endl;
+			}
+			else if (Continue *r = dynamic_cast<Continue *>(s)) {
+				if (BlockDS *b = dynamic_cast<BlockDS *>(&this->exec)) {
+					ass << "\taddiu $sp, $sp," << 4 * (b->decs.size()) << std::endl;
+				}
+				else if (BlockD *b = dynamic_cast<BlockD *>(&this->exec)) {
+					ass << "\taddiu $sp, $sp," << 4 * (b->decs.size()) << std::endl;
+				}
+				ass << "\taddiu $sp, $sp, 4" << std::endl;
+				ass << "\tlw $ra, 0($sp)" << std::endl;
+				ass << "\tj while_" << this->id << std::endl;
+			}
+			else if (IfE *i = dynamic_cast<IfE *>(s)) {
+				i->codeGen(ass, std::to_string(this->id));
+			}
+			else s->codeGen(ass);
+		}
+	}
+	if (BlockDS *b = dynamic_cast<BlockDS *>(&this->exec)) {
+		ass << "\taddiu $sp, $sp," << 4 * (b->decs.size()) << std::endl;
+		varid.back() -= b->decs.size();
+	}
+	else if (BlockD *b = dynamic_cast<BlockD *>(&this->exec)) {
+		ass << "\taddiu $sp, $sp," << 4 * (b->decs.size()) << std::endl;
+		varid.back() -= b->decs.size();
+	}
+	ass << "\taddiu $sp, $sp, 4" << std::endl;
+	ass << "\tlw $ra, 0($sp)" << std::endl;
+	ass << "\tj while_" << this->id << std::endl;
+	genBlock.push_back(ass.str());
+	end << std::endl;
+	end << "endwhile_" << this->id << ":" << std::endl;
+	if (BlockDS *b = dynamic_cast<BlockDS *>(&this->exec)) {
+		end << "\taddiu $sp, $sp," << 4 * (b->decs.size()) << std::endl;
+	}
+	else if (BlockD *b = dynamic_cast<BlockD *>(&this->exec)) {
+		end << "\taddiu $sp, $sp," << 4 * (b->decs.size()) << std::endl;
+	}
+	end << "\taddiu $sp, $sp, 4" << std::endl;
+	varid.back() -= 1;
+	end << "\tlw $ra, 0($sp)" << std::endl;
+	end << "\tjr $ra" << std::endl;
+	
+	genBlock.push_back(end.str());
+	sinceWhile.pop_back();
+	sinceWhile2.pop_back();
 }
 
 void Statement::codeGen(std::ostream &out, bool a) {
@@ -417,7 +1062,8 @@ void FuncCall::codeGen(std::ostream &out) {
 
 void Var::codeGen(std::ostream &out) {
 	if (this->dv->i == -1) {
-		out << "\tlw $a0," << "var" + name << std::endl;
+		out << "\tla $s0," << "var" + name << std::endl;
+		out << "\tlw $a0, ($s0)" << std::endl;
 	}
 	else
 		out << "\tlw $a0," << -4 * (this->dv->i + 1) << "($fp)" << std::endl;
@@ -425,8 +1071,10 @@ void Var::codeGen(std::ostream &out) {
 
 void Assignment::codeGen(std::ostream &out) {
 	this->value.codeGen(out);
-	if (this->dv->i == -1)
-		out << "\tsw $a0," << "var" + this->identifier << std::endl;
+	if (this->dv->i == -1) {
+		out << "\tla $s0," << "var" + this->identifier << std::endl;
+		out << "\tsw $a0, ($s0)" << std::endl;
+	}
 	else
 		out << "\tsw $a0," << -4 * (this->dv->i + 1) << "($fp)" << std::endl;
 }
