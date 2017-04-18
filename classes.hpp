@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+#include <iostream>
 #ifndef CLASSES_H
 #define CLASSES_H
 
@@ -7,18 +8,22 @@ class Expression {
 	public:
 		virtual ~Expression() {}
 		std::string print(Expression *a);
+		void codeGen(std::ostream &out);
 };
 
 class Statement : public Expression {
 	public:
 		virtual ~Statement() {}
 		std::string print(Statement *a);
+		void codeGen(std::ostream &out);
+		void codeGen(std::ostream &out, bool a);
 };
 
 class Declaration {
 	public:
 		virtual ~Declaration() {}
 		std::string print(Declaration *a);
+		void codeGen(std::ostream &out);
 };
 
 
@@ -36,6 +41,7 @@ class Operator {
 		std::string print() {
 			return op;
 		}
+		void codeGen(std::ostream &out);
 };
 
 class Program {
@@ -52,30 +58,36 @@ class Program {
 			s += "]";
 			return s;
 		}
+		void codeGen(std::ostream &out);
 };
 
 class DecVar : public Declaration {
 	public:
 		std::string identificator;
-		DecVar(std::string i) : identificator(i) {}
+		int i;
+		DecVar(std::string i) : identificator(i), i(0) {}
+		DecVar(std::string i, int id) : identificator(i), i(id) {}
 	public:
 		std::string print() {
 			std::string s = "[decvar [" + identificator + "]]";
 			return s;
 		}
+		void codeGen(std::ostream &out);
 };
 
 
 class Var : public Expression {
 	public:
 		std::string name;
-		Var(std::string n) : name(n) {}
-		Var(DecVar d) : name(d.identificator) {}
+		DecVar* dv;
+		Var(std::string n) : name(n), dv(NULL) {}
+		Var(DecVar &d) : name(d.identificator), dv(NULL) {}
 	public:
 		std::string print() {
 			std::string s = "[" + name + "]";
 			return s;
 		}
+		void codeGen(std::ostream &out);
 };
 
 class DecVarE : public DecVar {
@@ -87,6 +99,7 @@ class DecVarE : public DecVar {
 			std::string s = "[decvar [" + DecVar::identificator + "] " + assignExpression.print(&assignExpression) + "]";
 			return s;
 		}
+		void codeGen(std::ostream &out);
 };
 
 class Block {
@@ -97,6 +110,7 @@ class Block {
 			return s;
 		}
 		std::string print(Block *);
+		void codeGen(std::ostream &out);
 };
 
 class BlockDS : public Block {
@@ -118,6 +132,7 @@ class BlockDS : public Block {
 			s += "]";
 			return s;
 		}
+		void codeGen(std::ostream &out);
 };
 
 class BlockD : public Block {
@@ -134,6 +149,7 @@ class BlockD : public Block {
 			s += "]";
 			return s;
 		}
+		void codeGen(std::ostream &out);
 };
 
 class BlockS : public Block {
@@ -150,6 +166,7 @@ class BlockS : public Block {
 			s += "]";
 			return s;
 		}
+		void codeGen(std::ostream &out);
 };
 
 class DecFunc : public Declaration {
@@ -165,6 +182,7 @@ class DecFunc : public Declaration {
 			s += "]";
 			return s;
 		}
+		void codeGen(std::ostream &out);
 };
 
 class DecFuncP : public DecFunc {
@@ -183,6 +201,7 @@ class DecFuncP : public DecFunc {
 			s += "]";
 			return s;
 		}
+		void codeGen(std::ostream &out);
 };
 
 class BinOperation : public Expression {
@@ -196,6 +215,7 @@ class BinOperation : public Expression {
 			s += "]";
 			return s;
 		}
+		void codeGen(std::ostream &out);
 };
 
 class UnOperation : public Expression {
@@ -209,6 +229,7 @@ class UnOperation : public Expression {
 			s += "]";
 			return s;
 		}
+		void codeGen(std::ostream &out);
 };
 
 class FuncCall : public Statement {
@@ -227,6 +248,7 @@ class FuncCall : public Statement {
 			s += "]";
 			return s;
 		}
+		void codeGen(std::ostream &out);
 };
 
 class Integer : public Expression {
@@ -239,19 +261,22 @@ class Integer : public Expression {
 			s += "]";
 			return s;
 		}
+		void codeGen(std::ostream &out);
 };
 
 class Assignment : public Statement {
 	public:
 		std::string identifier;
+		DecVar *dv;
 		Expression &value;
-		Assignment(std::string i, Expression &v) : identifier(i), value(v) {}
+		Assignment(std::string i, Expression &v) : identifier(i), value(v), dv(NULL) {}
 	public:
 		std::string print() {
 			std::string s = "[assign [" + identifier + "] " + value.print(&value);
 			s += "]";
 			return s;
 		}
+		void codeGen(std::ostream &out);
 };
 
 class Return : public Statement {
@@ -263,6 +288,7 @@ class Return : public Statement {
 			std::string s = "[return " + value.print(&value) + "]";
 			return s;
 		}
+		void codeGen(std::ostream &out);
 };
 
 class ReturnV : public Statement {
@@ -271,42 +297,51 @@ class ReturnV : public Statement {
 			std::string s = "[return ]";
 			return s;
 		}
+		void codeGen(std::ostream &out);
 };
 
 class IfE : public Statement {
 	public:
 		Expression &condition;
 		Block &yes, &no;
-		IfE(Expression &c, Block &y, Block &n) : condition(c), yes(y), no(n) {}
+		int id;
+		IfE(Expression &c, Block &y, Block &n) : condition(c), yes(y), no(n), id(0) {}
 	public:
 		std::string print() {
 			std::string s = "[if "+ condition.print(&condition) + " " + yes.print(&yes) + " " + no.print(&no) +"]";
 			return s;
 		}
+		void codeGen(std::ostream &out);
+		void codeGen(std::ostream &out, std::string whileName);
 };
 
 class If : public Statement {
 	public:
 		Expression &condition;
+		int id;
 		Block &yes;
-		If(Expression &c, Block &y) : condition(c), yes(y) {}
+		If(Expression &c, Block &y) : condition(c), yes(y), id(0) {}
 	public:
 		std::string print() {
 			std::string s = "[if "+ condition.print(&condition) + " " + yes.print(&yes) + "]";
 			return s;
 		}
+		void codeGen(std::ostream &out);
+		void codeGen(std::ostream &out, std::string whileName);
 };
 
 class While : public Statement {
 	public:
 		Expression &condition;
 		Block &exec;
-		While(Expression &c, Block &e) : condition(c), exec(e) {}
+		int id;
+		While(Expression &c, Block &e) : condition(c), exec(e), id(0) {}
 	public:
 		std::string print() {
 			std::string s = "[while "+ condition.print(&condition) + " " + exec.print(&exec) + "]";
 			return s;
 		}
+		void codeGen(std::ostream &out);
 };
 
 class Continue : public Statement {
@@ -315,6 +350,7 @@ class Continue : public Statement {
 			std::string s = "[continue ]";
 			return s;
 		}
+		void codeGen(std::ostream &out);
 };
 
 class Break : public Statement {
@@ -323,6 +359,7 @@ class Break : public Statement {
 			std::string s = "[break ]";
 			return s;
 		}
+		void codeGen(std::ostream &out);
 };
 
 class KeepFunc {

@@ -1,0 +1,1 @@
+[program [decfunc [fib] [paramlist [n]] [block [if [<= [n] [2]] [block [return [1]]]] [return [+ [funccall [fib] [arglist [- [n] [1]]]] [funccall [fib] [arglist [- [n] [2]]]]]]]] [decfunc [main] [paramlist] [block [decvar [n]] [funccall [print] [arglist [funccall [fib] [arglist [n]]]]] [return [0]]]]]

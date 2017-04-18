@@ -1,0 +1,1 @@
+[program [decfunc [add] [paramlist [x] [y]] [block [return [+ [x] [y]]]]] [decfunc [main] [paramlist] [block [decvar [a]] [assign [a] [3]] [return [funccall [add] [arglist [a] [2]]]]]]]

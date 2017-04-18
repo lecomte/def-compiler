@@ -1,0 +1,1 @@
+[program [decfunc [main] [paramlist] [block [decvar [a]] [if [== [a] [3]] [block] [block [funccall [print] [arglist [3]]]]]]]]

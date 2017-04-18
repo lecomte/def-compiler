@@ -1,0 +1,7 @@
+def void main() {
+    int a;
+    if (a == 3) {}
+    else {
+        print(3);
+    }
+}

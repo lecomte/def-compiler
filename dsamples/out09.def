@@ -1,0 +1,1 @@
+[program [decfunc [mod] [paramlist [a] [b]] [block [return [- [a] [/ [a] [b]]]]]] [decfunc [gcd] [paramlist [a] [b]] [block [if [! [b]] [block [return [a]]]] [return [funccall [gcd] [arglist [b] [funccall [mod] [arglist [a] [b]]]]]]]] [decfunc [main] [paramlist] [block [funccall [print] [arglist [funccall [gcd] [arglist [10] [25]]]]]]]]

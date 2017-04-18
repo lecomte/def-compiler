@@ -1,0 +1,25 @@
+// recursive function
+def int recursive_fat(int n) {
+	if (n <= 0) {
+		return 1;
+	}
+	return n * recursive_fat(n - 1);
+}
+
+// iterative function
+def int iterative_fat(int n) {
+    int ret = 1;
+    int i = 1;
+    while (i <= n) {
+        ret = ret * i;
+        i = i + 1;
+    }
+    return ret;
+}
+
+def int main() {
+	int n;
+	print(recursive_fat(n));
+	print(iterative_fat(n));
+	return 0;
+}

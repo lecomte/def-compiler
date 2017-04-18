@@ -3,7 +3,7 @@
 %{ 
 #include <string>
 #include <vector>
-#include "classes.h"
+#include "classes.hpp"
 #include "parser.hpp"
 %}
 

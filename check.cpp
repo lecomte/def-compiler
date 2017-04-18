@@ -1,5 +1,5 @@
 #include <bits/stdc++.h>
-#include "classes.h"	
+#include "classes.hpp"	
 #include "check.hpp"	
 
 bool ftype;
@@ -31,8 +31,9 @@ bool ftype;
         ftype = (df->type.t == 1);
         scopus.push_back(new std::vector<Declaration *>);
         if (DecFuncP *dfp = dynamic_cast<DecFuncP *>(df)) {
+        	int i = -2;
 			for (Var *v : dfp->params) {
-				checkSym(new DecVar(v->name));
+				checkSym(new DecVar(v->name, i--));
 			}
 		}
 		checkSym(&(df->block), false);
@@ -76,6 +77,22 @@ bool ftype;
 	}
 	void checkSym(Statement *s, bool f) {
 		if (Assignment *ass = dynamic_cast<Assignment *>(s)) {
+			Declaration *de = NULL;
+			for (std::vector<std::vector<Declaration *> *>::reverse_iterator it = scopus.rbegin(); it != scopus.rend(); it++) {
+				for (Declaration *d : *(*it)) {
+					if (ass->identifier == dynamic_cast<DecVar *>(d)->identificator) {
+						de = d;
+						ass->dv = dynamic_cast<DecVar *>(d);
+						break;
+					}
+				}
+				if (de != NULL)
+					break;
+			}
+			if (de == NULL) {
+				yyerror("Variable not declared");
+				return;
+			}
 			checkSym(&(ass->value));
 		}
 		else if (FuncCall *fc = dynamic_cast<FuncCall *>(s)) {
@@ -169,8 +186,12 @@ bool ftype;
 			for (Declaration *d : *(*it)) {
 				if (v->name == dynamic_cast<DecVar *>(d)->identificator) {
 					de = d;
+					v->dv = dynamic_cast<DecVar *>(d);
+					break;
 				}
 			}
+			if (de != NULL)
+				break;
 		}
 		if (de == NULL) {
 			yyerror("Variable not declared");

@@ -1,7 +1,7 @@
-parser: lexer.o parser.o check.o
-	g++ -g -std=c++11 lexer.o check.o parser.o -o parser
+compiler: lexer.o classes.o parser.o check.o compiler.o
+	g++ -g -std=c++11 lexer.o classes.o check.o parser.o compiler.o -o compiler
 	
-lexer.o: parser.h lexer.cpp
+lexer.o: parser.hpp lexer.cpp
 	g++ -g -std=c++11 -c lexer.cpp
 	
 parser.o: parser.cpp
@@ -9,14 +9,20 @@ parser.o: parser.cpp
 	
 check.o: check.cpp
 	g++ -g -std=c++11 -c check.cpp
+
+compiler.o: compiler.cpp
+	g++ -g -std=c++11 -c compiler.cpp
+	
+classes.o: classes.cpp classes.hpp
+	g++ -g -std=c++11 -c classes.cpp
 	
 parser.cpp: parser.y
 	bison -d -o parser.cpp parser.y
 	
-parser.h: parser.cpp
+parser.hpp: parser.cpp
 
 lexer.cpp: teste.l
 	lex -o lexer.cpp teste.l
 	
 clean:
-	rm *.o parser.cpp lexer.cpp
+	rm *.o parser.cpp parser.hpp lexer.cpp compiler
